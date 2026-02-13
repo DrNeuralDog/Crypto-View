@@ -258,6 +258,11 @@ publish/
 
 # NuGet Packages
 *.nupkg
+
+# ---> Go module and project makefile (must be tracked in this repo)
+!go.mod
+!go.sum
+!Makefile
 # The packages folder can be ignored because of Package Restore
 **/packages/*
 # except build/, which is used as an MSBuild target.
@@ -361,4 +366,3 @@ docs/OtherHelpfulFiles/*.txt
 docs/DesignPreview/*.txt
 docs/Examples/*.txt
 docs/WorkflowLogs/*.txt
-
