@@ -6,7 +6,6 @@ import (
 	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/canvas"
 	"fyne.io/fyne/v2/container"
-	"fyne.io/fyne/v2/theme"
 	"fyne.io/fyne/v2/widget"
 )
 
@@ -16,8 +15,12 @@ func NewFooter() fyne.CanvasObject {
 
 	statusLabel := widget.NewLabel("Status:")
 	okText := canvas.NewText("OK", color.NRGBA{R: 0x4C, G: 0xAF, B: 0x50, A: 0xFF})
-	okText.TextSize = theme.CaptionTextSize()
+	okText.TextSize = 16
 
-	content := container.NewHBox(indicatorWrap, statusLabel, okText)
-	return container.NewPadded(content)
+	row := container.NewHBox(
+		container.NewCenter(indicatorWrap),
+		container.NewCenter(statusLabel),
+		container.NewCenter(okText),
+	)
+	return container.NewPadded(row)
 }

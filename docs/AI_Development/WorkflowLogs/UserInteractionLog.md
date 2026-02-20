@@ -26,3 +26,10 @@
 [2026-02-20 19:03:51] User executed /sync_logs - Attempted sync blocked due expired nlm authentication; requested re-login.
 [2026-02-20 19:07:20] User executed /sync_logs after re-authentication - Completed successfully: old log sources replaced and verified in NotebookLM.
 [2026-02-20 20:05:20] User requested full implementation of Dark/Light UI plan based on design image and pseudocode - Implemented and validated successfully.
+[2026-02-20 20:55:24] User requested post-implementation UI fixes (theme icon size, app/logo icons, +20% window height, text alignment, status alignment, missing coin icons) - Completed and verified.
+[2026-02-20 21:10:11] User requested second UI correction set from 'Реализация 2 light.png' (theme icon swap/fix, footer alignment, header logo position/size) - Completed and verified.
+[2026-02-20 21:21:21] User requested third dark-theme UI correction set (moon icon shape, status dot alignment, time/name positioning) - Implemented and validated.
+[2026-02-20 21:29:12] User requested dark-theme pass #4: fix crescent icon and fine-tune time position (less right, closer to title) - Completed and verified.
+[2026-02-20 21:34:55] User requested precise timestamp placement under ticker left edge with tighter vertical gap - Implemented and verified.
+[2026-02-20 21:38:23] User requested timestamp to align exactly with ticker left edge and reduce vertical spacing to 1px - Implemented and validated.
+[2026-02-20 21:41:04] User requested tighter timestamp spacing, slight right shift for time only, and fixed non-resizable window - Implemented and verified.

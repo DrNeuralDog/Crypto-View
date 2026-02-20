@@ -3,10 +3,11 @@ package components
 import (
 	"fmt"
 	"image/color"
-	"os"
 	"sync"
 
 	"cryptoview/internal/model"
+	"cryptoview/internal/ui/assets"
+
 	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/canvas"
 	"fyne.io/fyne/v2/container"
@@ -108,12 +109,8 @@ func (c *CoinListController) iconForCoin(coin model.Coin) fyne.Resource {
 		return cached
 	}
 
-	if _, err := os.Stat(coin.IconPath); err != nil {
-		return nil
-	}
-
-	resource, err := fyne.LoadResourceFromPath(coin.IconPath)
-	if err != nil {
+	resource := assets.LoadResource(coin.IconPath)
+	if resource == nil {
 		return nil
 	}
 
@@ -190,6 +187,7 @@ func newCoinListItem() *coinListItem {
 
 	updatedAt := canvas.NewText("--:--:--", theme.Color(theme.ColorNamePlaceHolder))
 	updatedAt.TextSize = theme.CaptionTextSize()
+	updatedAt.Alignment = fyne.TextAlignLeading
 
 	name := widget.NewLabel("Bitcoin | BTC")
 
@@ -198,20 +196,30 @@ func newCoinListItem() *coinListItem {
 
 	change := canvas.NewText("+0.00%", color.NRGBA{R: 0x4C, G: 0xAF, B: 0x50, A: 0xFF})
 	change.TextStyle = fyne.TextStyle{Bold: true}
+	change.TextSize = theme.TextSize()
 
 	chartIcon := widget.NewIcon(theme.NewThemedResource(theme.ListIcon()))
 
-	row := container.NewHBox(
-		icon,
-		container.NewVBox(ticker, updatedAt),
+	mainInfo := container.NewHBox(
+		ticker,
+		spacerX(8),
 		name,
+	)
+	//timeRow := container.NewHBox(spacerX(1), updatedAt)
+	meta := container.New(&vGapLayout{gap: 0.9}, mainInfo, updatedAt)
+	row := container.NewHBox(
+		container.NewCenter(icon),
+		spacerX(8),
+		meta,
 		layout.NewSpacer(),
-		price,
-		change,
-		chartIcon,
+		container.NewCenter(price),
+		spacerX(8),
+		container.NewCenter(change),
+		spacerX(8),
+		container.NewCenter(chartIcon),
 	)
 	separator := widget.NewSeparator()
-	content := container.NewVBox(container.NewPadded(row), separator)
+	content := container.NewVBox(container.NewPadded(container.NewPadded(row)), separator)
 
 	item := &coinListItem{
 		root:      content,
@@ -262,4 +270,43 @@ func (i *coinListItem) applyCoin(
 	} else {
 		i.separator.Show()
 	}
+}
+
+func spacerX(width float32) fyne.CanvasObject {
+	rect := canvas.NewRectangle(color.Transparent)
+	rect.SetMinSize(fyne.NewSize(width, 1))
+	return rect
+}
+
+type vGapLayout struct {
+	gap float32
+}
+
+func (l *vGapLayout) Layout(objects []fyne.CanvasObject, size fyne.Size) {
+	y := float32(0)
+	for idx, obj := range objects {
+		min := obj.MinSize()
+		obj.Resize(fyne.NewSize(size.Width, min.Height))
+		obj.Move(fyne.NewPos(0, y))
+		y += min.Height
+		if idx < len(objects)-1 {
+			y += l.gap
+		}
+	}
+}
+
+func (l *vGapLayout) MinSize(objects []fyne.CanvasObject) fyne.Size {
+	var width float32
+	var height float32
+	for idx, obj := range objects {
+		min := obj.MinSize()
+		if min.Width > width {
+			width = min.Width
+		}
+		height += min.Height
+		if idx < len(objects)-1 {
+			height += l.gap
+		}
+	}
+	return fyne.NewSize(width, height)
 }

@@ -8,17 +8,25 @@ import (
 
 	"cryptoview/internal/api"
 	"cryptoview/internal/model"
+	"cryptoview/internal/ui/assets"
 	"cryptoview/internal/ui/components"
 	uitheme "cryptoview/internal/ui/theme"
 	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/container"
+	"fyne.io/fyne/v2/theme"
 )
 
 func BuildMainWindow(a fyne.App, data []model.Coin) fyne.Window {
 	a.Settings().SetTheme(uitheme.NewForMode(uitheme.ModeSystem))
 
 	w := a.NewWindow("CryptoView")
-	w.Resize(fyne.NewSize(450, 400))
+	w.Resize(fyne.NewSize(450, 480))
+	w.SetFixedSize(true)
+	appIcon := assets.LoadResource("resources/Logo/CryptoView Icon.png")
+	if appIcon == nil {
+		appIcon = theme.FyneLogo()
+	}
+	w.SetIcon(appIcon)
 
 	apiClient := api.NewClient(10 * time.Second)
 	coinList := components.NewCoinList(data)

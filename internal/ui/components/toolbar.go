@@ -1,6 +1,8 @@
 package components
 
 import (
+	"cryptoview/internal/ui/assets"
+
 	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/canvas"
 	"fyne.io/fyne/v2/container"
@@ -24,7 +26,12 @@ func NewToolbar(
 ) *Toolbar {
 	title := widget.NewLabel("CryptoView")
 	title.TextStyle = fyne.TextStyle{Bold: true}
-	logo := widget.NewIcon(theme.FyneLogo())
+	logoResource := assets.LoadResource("resources/Logo/CryptoView Icon.png")
+	if logoResource == nil {
+		logoResource = theme.FyneLogo()
+	}
+	logo := widget.NewIcon(logoResource)
+	logoWrap := container.NewGridWrap(fyne.NewSize(28, 28), logo)
 
 	currencySelect := widget.NewSelect([]string{string(FiatUSD), string(FiatEUR), string(FiatRUB)}, func(selected string) {
 		if onCurrencyChanged == nil {
@@ -47,18 +54,19 @@ func NewToolbar(
 
 	themeControl := NewThemeController(app)
 	var themeButton *widget.Button
-	themeButton = widget.NewButton(themeControl.ActionIconText(), func() {
+	themeButton = widget.NewButtonWithIcon("", themeControl.ActionIconResource(), func() {
 		themeControl.Toggle()
-		themeButton.SetText(themeControl.ActionIconText())
+		themeButton.SetIcon(themeControl.ActionIconResource())
 		if onThemeChanged != nil {
 			onThemeChanged()
 		}
 	})
 	themeButton.Importance = widget.LowImportance
-	themeButton.SetText(themeControl.ActionIconText())
+	themeButton.SetIcon(themeControl.ActionIconResource())
+	themeButtonWrap := container.NewGridWrap(fyne.NewSize(56, 40), themeButton)
 
-	left := container.NewHBox(logo, title)
-	right := container.NewHBox(currencySelect, langSelect, themeButton)
+	left := container.NewHBox(logoWrap, title)
+	right := container.NewHBox(currencySelect, langSelect, themeButtonWrap)
 	header := container.NewBorder(nil, canvas.NewLine(theme.Color(theme.ColorNameSeparator)), left, right)
 
 	return &Toolbar{

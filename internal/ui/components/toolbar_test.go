@@ -36,18 +36,18 @@ func TestToolbarThemeButtonTogglesTheme(t *testing.T) {
 
 	toolbar := NewToolbar(a, nil, nil, nil)
 	before := a.Settings().Theme()
-	beforeLabel := toolbar.ThemeButton().Text
+	beforeIcon := toolbar.ThemeButton().Icon
 
 	test.Tap(toolbar.ThemeButton())
 
 	after := a.Settings().Theme()
-	afterLabel := toolbar.ThemeButton().Text
+	afterIcon := toolbar.ThemeButton().Icon
 
 	if before == after {
 		t.Fatal("expected theme to change after tapping theme button")
 	}
-	if beforeLabel == afterLabel {
-		t.Fatal("expected theme action icon text to change after toggle")
+	if beforeIcon == afterIcon {
+		t.Fatal("expected theme action icon resource to change after toggle")
 	}
 	if toolbar.ThemeMode() == "system" {
 		t.Fatal("expected theme mode to leave system after first toggle")
