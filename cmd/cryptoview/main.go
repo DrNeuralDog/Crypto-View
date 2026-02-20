@@ -1,13 +1,14 @@
 package main
 
 import (
-	"fyne.io/fyne/v2"
+	"cryptoview/internal/model"
+	"cryptoview/internal/ui"
 	"fyne.io/fyne/v2/app"
 )
 
 func main() {
 	a := app.New()
-	w := a.NewWindow("CryptoView")
-	w.Resize(fyne.NewSize(900, 600))
+	data := model.GetMockCoins()
+	w := ui.BuildMainWindow(a, data)
 	w.ShowAndRun()
 }

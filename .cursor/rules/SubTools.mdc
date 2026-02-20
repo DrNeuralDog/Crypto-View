@@ -1,0 +1,27 @@
+---
+description: Rules for using external auxiliary tools (like repomix) for AI context optimization and project analysis.
+alwaysApply: false
+---
+
+# Auxiliary Sub-Tools Rules
+
+## Primary Directive
+You are equipped to use external CLI tools to enhance your understanding of the project and optimize context management. These tools are subject to change, so always verify their availability before executing.
+
+## Tool: Repomix (Codebase Packer)
+**Purpose:** Packs the entire repository into a single, AI-friendly formatted file to provide full project context without exceeding token limits or losing directory structure comprehension.
+
+### Trigger Conditions
+- When the user asks to "analyze the whole project", "pack the code", "create a map", or explicitly requests the use of `repomix`.
+- When you need a comprehensive overview of the entire codebase to solve a complex architectural issue, analyze dependencies, or refactor across multiple modules.
+
+### Execution Protocol
+1. **Verify Availability:** Run `repomix --version` in the terminal to ensure the tool is installed. If not, inform the user.
+2. **Execution:** Run the `repomix` command in the root directory of the project.
+3. **NotebookLM Integration (CRITICAL):**
+   - Once the output file (usually `repomix-output.txt` or `repomix-output.xml`) is generated, you MUST use the `nlm cli` to upload this file as a new source to the project's NotebookLM (retrieve the Notebook ID from `docs/AI_Development/ProjectManifest.md`).
+   - If an older version of the repomix output already exists in NotebookLM, use `nlm cli` to delete the old source before uploading the new one to prevent context duplication.
+4. **Cleanup:** After confirming successful upload to NotebookLM, automatically delete the local `repomix-output.txt` file from the project root to keep the workspace clean, or ensure it is added to `.gitignore`.
+
+## Command Reference Extension
+If the user types `/pack_project`, you must automatically execute the Repomix Execution Protocol described above.

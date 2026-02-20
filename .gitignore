@@ -295,6 +295,14 @@ ClientBin/
 node_modules/
 orleans.codegen.cs
 
+# Repomix / packed codebase output (for NotebookLM)
+repomix-output.md
+repomix-output.txt
+repomix-output.xml
+# But keep repomix output in docs and .cursor (project artifacts)
+!docs/**/repomix-output.*
+!.cursor/**/repomix-output.*
+
 # RIA/Silverlight projects
 Generated_Code/
 
@@ -352,17 +360,6 @@ CMakeUserPresets.json
 build/
 .vscode/
 .idea/
-.cursor/
-.cursor/**
 styles/
 
-docs/
-docs/*
-docs/**
-
 nul
-
-docs/OtherHelpfulFiles/*.txt
-docs/DesignPreview/*.txt
-docs/Examples/*.txt
-docs/WorkflowLogs/*.txt
