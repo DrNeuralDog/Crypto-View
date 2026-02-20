@@ -38,6 +38,9 @@ func TestToCoin(t *testing.T) {
 	if coin.LastUpdateTime == "--:--:--" || coin.LastUpdateTime == "" {
 		t.Fatalf("expected parsed last update time, got %s", coin.LastUpdateTime)
 	}
+	if coin.IconPath == "" {
+		t.Fatal("expected icon path to be mapped by coin id")
+	}
 }
 
 func TestToCoinInvalidTimestamp(t *testing.T) {

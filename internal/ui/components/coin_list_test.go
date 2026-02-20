@@ -1,13 +1,12 @@
 package components
 
 import (
+	"image/color"
 	"strings"
 	"testing"
 
 	"cryptoview/internal/model"
-	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/test"
-	"fyne.io/fyne/v2/widget"
 )
 
 func TestNewCoinList(t *testing.T) {
@@ -36,26 +35,59 @@ func TestCoinListCurrencySwitch(t *testing.T) {
 	a := test.NewApp()
 	defer a.Quit()
 
-	data := model.GetMockCoins()
-	controller := NewCoinList(data)
+	controller := NewCoinList(model.GetMockCoins())
 	item := controller.Widget().CreateItem()
+	row := item.(*coinListItem)
 
 	controller.Widget().UpdateItem(0, item)
-	priceLabel := item.(*fyne.Container).Objects[3].(*widget.Label)
-	if !strings.HasPrefix(priceLabel.Text, "$") {
-		t.Fatalf("expected USD symbol, got %q", priceLabel.Text)
+	if !strings.HasPrefix(row.price.Text, "$") {
+		t.Fatalf("expected USD symbol, got %q", row.price.Text)
 	}
 
 	controller.SetCurrency(FiatEUR)
 	controller.Widget().UpdateItem(0, item)
-	if !strings.HasPrefix(priceLabel.Text, "€") {
-		t.Fatalf("expected EUR symbol, got %q", priceLabel.Text)
+	if !strings.HasPrefix(row.price.Text, "\u20ac") {
+		t.Fatalf("expected EUR symbol, got %q", row.price.Text)
 	}
 
 	controller.SetCurrency(FiatRUB)
 	controller.Widget().UpdateItem(0, item)
-	if !strings.HasPrefix(priceLabel.Text, "₽") {
-		t.Fatalf("expected RUB symbol, got %q", priceLabel.Text)
+	if !strings.HasPrefix(row.price.Text, "\u20bd") {
+		t.Fatalf("expected RUB symbol, got %q", row.price.Text)
+	}
+}
+
+func TestCoinListChangeColor(t *testing.T) {
+	a := test.NewApp()
+	defer a.Quit()
+
+	controller := NewCoinList(model.GetMockCoins())
+	item := controller.Widget().CreateItem()
+	row := item.(*coinListItem)
+
+	controller.Widget().UpdateItem(0, item)
+	if got := asNRGBA(row.change.Color); got != (color.NRGBA{R: 0x4C, G: 0xAF, B: 0x50, A: 0xFF}) {
+		t.Fatalf("expected positive change color green, got %+v", got)
+	}
+
+	controller.Widget().UpdateItem(1, item)
+	if got := asNRGBA(row.change.Color); got != (color.NRGBA{R: 0xF4, G: 0x43, B: 0x36, A: 0xFF}) {
+		t.Fatalf("expected negative change color red, got %+v", got)
+	}
+}
+
+func TestCoinListLastItemSeparatorHidden(t *testing.T) {
+	a := test.NewApp()
+	defer a.Quit()
+
+	controller := NewCoinList(model.GetMockCoins())
+	item := controller.Widget().CreateItem()
+	row := item.(*coinListItem)
+
+	last := controller.Widget().Length() - 1
+	controller.Widget().UpdateItem(last, item)
+	if row.separator.Visible() {
+		t.Fatal("expected last item separator to be hidden")
 	}
 }
 
@@ -74,4 +106,9 @@ func TestReplaceData(t *testing.T) {
 	if got := controller.Widget().Length(); got != 1 {
 		t.Fatalf("expected list length 1 after replace, got %d", got)
 	}
+}
+
+func asNRGBA(c color.Color) color.NRGBA {
+	r, g, b, a := c.RGBA()
+	return color.NRGBA{R: uint8(r >> 8), G: uint8(g >> 8), B: uint8(b >> 8), A: uint8(a >> 8)}
 }

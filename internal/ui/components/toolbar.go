@@ -2,12 +2,30 @@ package components
 
 import (
 	"fyne.io/fyne/v2"
+	"fyne.io/fyne/v2/canvas"
 	"fyne.io/fyne/v2/container"
-	"fyne.io/fyne/v2/layout"
+	"fyne.io/fyne/v2/theme"
 	"fyne.io/fyne/v2/widget"
 )
 
-func NewToolbar(onCurrencyChanged func(FiatCurrency)) fyne.CanvasObject {
+type Toolbar struct {
+	root           fyne.CanvasObject
+	themeButton    *widget.Button
+	themeControl   *ThemeController
+	currencySelect *widget.Select
+	langSelect     *widget.Select
+}
+
+func NewToolbar(
+	app fyne.App,
+	onCurrencyChanged func(FiatCurrency),
+	onThemeChanged func(),
+	onLanguageChanged func(string),
+) *Toolbar {
+	title := widget.NewLabel("CryptoView")
+	title.TextStyle = fyne.TextStyle{Bold: true}
+	logo := widget.NewIcon(theme.FyneLogo())
+
 	currencySelect := widget.NewSelect([]string{string(FiatUSD), string(FiatEUR), string(FiatRUB)}, func(selected string) {
 		if onCurrencyChanged == nil {
 			return
@@ -20,14 +38,54 @@ func NewToolbar(onCurrencyChanged func(FiatCurrency)) fyne.CanvasObject {
 	})
 	currencySelect.SetSelected(string(FiatUSD))
 
-	langButton := widget.NewButton("Lang", func() {})
-	themeButton := widget.NewButton("Theme", func() {})
+	langSelect := widget.NewSelect([]string{"EN", "ENG"}, func(selected string) {
+		if onLanguageChanged != nil {
+			onLanguageChanged(selected)
+		}
+	})
+	langSelect.SetSelected("EN")
 
-	return container.NewHBox(
-		widget.NewLabel("CryptoView"),
-		layout.NewSpacer(),
-		currencySelect,
-		langButton,
-		themeButton,
-	)
+	themeControl := NewThemeController(app)
+	var themeButton *widget.Button
+	themeButton = widget.NewButton(themeControl.ActionIconText(), func() {
+		themeControl.Toggle()
+		themeButton.SetText(themeControl.ActionIconText())
+		if onThemeChanged != nil {
+			onThemeChanged()
+		}
+	})
+	themeButton.Importance = widget.LowImportance
+	themeButton.SetText(themeControl.ActionIconText())
+
+	left := container.NewHBox(logo, title)
+	right := container.NewHBox(currencySelect, langSelect, themeButton)
+	header := container.NewBorder(nil, canvas.NewLine(theme.Color(theme.ColorNameSeparator)), left, right)
+
+	return &Toolbar{
+		root:           header,
+		themeButton:    themeButton,
+		themeControl:   themeControl,
+		currencySelect: currencySelect,
+		langSelect:     langSelect,
+	}
+}
+
+func (t *Toolbar) CanvasObject() fyne.CanvasObject {
+	return t.root
+}
+
+func (t *Toolbar) ThemeButton() *widget.Button {
+	return t.themeButton
+}
+
+func (t *Toolbar) ThemeMode() string {
+	return string(t.themeControl.Mode())
+}
+
+func (t *Toolbar) CurrencySelect() *widget.Select {
+	return t.currencySelect
+}
+
+func (t *Toolbar) LanguageSelect() *widget.Select {
+	return t.langSelect
 }

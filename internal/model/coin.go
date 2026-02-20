@@ -15,6 +15,17 @@ type Coin struct {
 	IconPath       string
 }
 
+var coinIconPathByID = map[string]string{
+	"bitcoin":          "resources/coins/bitcoin.png",
+	"ethereum":         "resources/coins/ethereum.png",
+	"the-open-network": "resources/coins/the-open-network.png",
+	"toncoin":          "resources/coins/the-open-network.png",
+	"solana":           "resources/coins/solana.png",
+	"dogecoin":         "resources/coins/dogecoin.png",
+	"ripple":           "resources/coins/ripple.png",
+	"litecoin":         "resources/coins/litecoin.png",
+}
+
 type CoinGeckoMarket struct {
 	ID                       string  `json:"id"`
 	Symbol                   string  `json:"symbol"`
@@ -32,8 +43,15 @@ func ToCoin(m CoinGeckoMarket) Coin {
 		Price:          m.CurrentPrice,
 		Change24h:      m.PriceChangePercentage24h,
 		LastUpdateTime: formatLastUpdated(m.LastUpdated),
-		IconPath:       "",
+		IconPath:       iconPathForID(m.ID),
 	}
+}
+
+func iconPathForID(id string) string {
+	if path, ok := coinIconPathByID[id]; ok {
+		return path
+	}
+	return ""
 }
 
 func formatLastUpdated(raw string) string {
@@ -61,7 +79,7 @@ func GetMockCoins() []Coin {
 			Price:          96543.12,
 			Change24h:      2.54,
 			LastUpdateTime: "12:34:56",
-			IconPath:       "resources/coins/btc.png",
+			IconPath:       iconPathForID("bitcoin"),
 		},
 		{
 			ID:             "ethereum",
@@ -70,16 +88,16 @@ func GetMockCoins() []Coin {
 			Price:          3421.77,
 			Change24h:      -1.23,
 			LastUpdateTime: "12:34:56",
-			IconPath:       "resources/coins/eth.png",
+			IconPath:       iconPathForID("ethereum"),
 		},
 		{
-			ID:             "toncoin",
+			ID:             "the-open-network",
 			Name:           "TON Coin",
 			Ticker:         "TON",
 			Price:          5.89,
 			Change24h:      0.00,
 			LastUpdateTime: "12:34:56",
-			IconPath:       "resources/coins/ton.png",
+			IconPath:       iconPathForID("the-open-network"),
 		},
 		{
 			ID:             "solana",
@@ -88,7 +106,7 @@ func GetMockCoins() []Coin {
 			Price:          183.45,
 			Change24h:      5.91,
 			LastUpdateTime: "12:34:56",
-			IconPath:       "resources/coins/sol.png",
+			IconPath:       iconPathForID("solana"),
 		},
 		{
 			ID:             "dogecoin",
@@ -97,7 +115,7 @@ func GetMockCoins() []Coin {
 			Price:          0.25,
 			Change24h:      -3.02,
 			LastUpdateTime: "12:34:56",
-			IconPath:       "resources/coins/doge.png",
+			IconPath:       iconPathForID("dogecoin"),
 		},
 		{
 			ID:             "ripple",
@@ -106,7 +124,7 @@ func GetMockCoins() []Coin {
 			Price:          0.71,
 			Change24h:      1.04,
 			LastUpdateTime: "12:34:56",
-			IconPath:       "resources/coins/xrp.png",
+			IconPath:       iconPathForID("ripple"),
 		},
 		{
 			ID:             "litecoin",
@@ -115,7 +133,7 @@ func GetMockCoins() []Coin {
 			Price:          102.33,
 			Change24h:      -0.67,
 			LastUpdateTime: "12:34:56",
-			IconPath:       "resources/coins/ltc.png",
+			IconPath:       iconPathForID("litecoin"),
 		},
 	}
 }

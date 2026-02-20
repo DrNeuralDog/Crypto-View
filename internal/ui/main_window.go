@@ -9,13 +9,16 @@ import (
 	"cryptoview/internal/api"
 	"cryptoview/internal/model"
 	"cryptoview/internal/ui/components"
+	uitheme "cryptoview/internal/ui/theme"
 	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/container"
 )
 
 func BuildMainWindow(a fyne.App, data []model.Coin) fyne.Window {
+	a.Settings().SetTheme(uitheme.NewForMode(uitheme.ModeSystem))
+
 	w := a.NewWindow("CryptoView")
-	w.Resize(fyne.NewSize(900, 600))
+	w.Resize(fyne.NewSize(450, 400))
 
 	apiClient := api.NewClient(10 * time.Second)
 	coinList := components.NewCoinList(data)
@@ -50,13 +53,13 @@ func BuildMainWindow(a fyne.App, data []model.Coin) fyne.Window {
 		}(id)
 	}
 
-	header := components.NewToolbar(func(currency components.FiatCurrency) {
+	header := components.NewToolbar(a, func(currency components.FiatCurrency) {
 		coinList.SetCurrency(currency)
 		fetchAndApply(currency)
-	})
+	}, nil, nil)
 	footer := NewFooter()
 
-	content := container.NewBorder(header, footer, nil, nil, coinList.Widget())
+	content := container.NewBorder(header.CanvasObject(), footer, nil, nil, coinList.Widget())
 	w.SetContent(content)
 	fetchAndApply(components.FiatUSD)
 

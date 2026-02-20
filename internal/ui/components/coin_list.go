@@ -3,6 +3,7 @@ package components
 import (
 	"fmt"
 	"image/color"
+	"os"
 	"sync"
 
 	"cryptoview/internal/model"
@@ -10,6 +11,7 @@ import (
 	"fyne.io/fyne/v2/canvas"
 	"fyne.io/fyne/v2/container"
 	"fyne.io/fyne/v2/layout"
+	"fyne.io/fyne/v2/theme"
 	"fyne.io/fyne/v2/widget"
 )
 
@@ -26,12 +28,14 @@ type CoinListController struct {
 	data     []model.Coin
 	currency FiatCurrency
 	mu       sync.RWMutex
+	icons    map[string]fyne.Resource
 }
 
 func NewCoinList(data []model.Coin) *CoinListController {
 	controller := &CoinListController{
 		data:     data,
 		currency: FiatUSD,
+		icons:    make(map[string]fyne.Resource),
 	}
 
 	controller.list = widget.NewList(
@@ -41,20 +45,7 @@ func NewCoinList(data []model.Coin) *CoinListController {
 			return len(controller.data)
 		},
 		func() fyne.CanvasObject {
-			icon := widget.NewLabel("[icon]")
-			nameTicker := widget.NewLabel("")
-			price := widget.NewLabel("")
-			change := canvas.NewText("", color.NRGBA{R: 128, G: 128, B: 128, A: 255})
-			lastUpdate := widget.NewLabel("")
-
-			return container.NewHBox(
-				icon,
-				nameTicker,
-				layout.NewSpacer(),
-				price,
-				change,
-				lastUpdate,
-			)
+			return newCoinListItem()
 		},
 		func(id widget.ListItemID, item fyne.CanvasObject) {
 			controller.mu.RLock()
@@ -64,25 +55,19 @@ func NewCoinList(data []model.Coin) *CoinListController {
 			}
 			coin := controller.data[id]
 			currency := controller.currency
+			isLast := int(id) == len(controller.data)-1
 			controller.mu.RUnlock()
 
-			row := item.(*fyne.Container)
-			icon := row.Objects[0].(*widget.Label)
-			nameTicker := row.Objects[1].(*widget.Label)
-			price := row.Objects[3].(*widget.Label)
-			change := row.Objects[4].(*canvas.Text)
-			lastUpdate := row.Objects[5].(*widget.Label)
-
-			icon.SetText(fmt.Sprintf("[%s]", coin.Ticker))
-			nameTicker.SetText(fmt.Sprintf("%s | %s", coin.Name, coin.Ticker))
-			price.SetText(formatPriceByCurrency(coin.Price, currency))
-			change.Text = fmt.Sprintf("%.2f%%", coin.Change24h)
-			change.Color = changeColor(coin.Change24h)
-			change.Refresh()
-			lastUpdate.SetText(coin.LastUpdateTime)
+			row := item.(*coinListItem)
+			row.applyCoin(
+				coin,
+				formatPriceByCurrency(coin.Price, currency),
+				changeColor(coin.Change24h),
+				controller.iconForCoin(coin),
+				isLast,
+			)
 		},
 	)
-
 	return controller
 }
 
@@ -111,6 +96,33 @@ func (c *CoinListController) ReplaceData(coins []model.Coin) {
 	})
 }
 
+func (c *CoinListController) iconForCoin(coin model.Coin) fyne.Resource {
+	if coin.IconPath == "" {
+		return nil
+	}
+
+	c.mu.RLock()
+	cached, ok := c.icons[coin.IconPath]
+	c.mu.RUnlock()
+	if ok {
+		return cached
+	}
+
+	if _, err := os.Stat(coin.IconPath); err != nil {
+		return nil
+	}
+
+	resource, err := fyne.LoadResourceFromPath(coin.IconPath)
+	if err != nil {
+		return nil
+	}
+
+	c.mu.Lock()
+	c.icons[coin.IconPath] = resource
+	c.mu.Unlock()
+	return resource
+}
+
 func parseFiatCurrency(raw string) (FiatCurrency, bool) {
 	switch FiatCurrency(raw) {
 	case FiatUSD, FiatEUR, FiatRUB:
@@ -137,19 +149,117 @@ func formatPriceByCurrency(price float64, currency FiatCurrency) string {
 	symbol := "$"
 	switch currency {
 	case FiatEUR:
-		symbol = "€"
+		symbol = "\u20ac"
 	case FiatRUB:
-		symbol = "₽"
+		symbol = "\u20bd"
 	}
 	return fmt.Sprintf("%s%.2f", symbol, price)
 }
 
 func changeColor(change24h float64) color.Color {
 	if change24h > 0 {
-		return color.NRGBA{R: 34, G: 139, B: 34, A: 255}
+		return color.NRGBA{R: 0x4C, G: 0xAF, B: 0x50, A: 0xFF}
 	}
 	if change24h < 0 {
-		return color.NRGBA{R: 220, G: 20, B: 60, A: 255}
+		return color.NRGBA{R: 0xF4, G: 0x43, B: 0x36, A: 0xFF}
 	}
 	return color.NRGBA{R: 128, G: 128, B: 128, A: 255}
+}
+
+type coinListItem struct {
+	widget.BaseWidget
+
+	root      *fyne.Container
+	icon      *canvas.Image
+	ticker    *widget.Label
+	updatedAt *canvas.Text
+	name      *widget.Label
+	price     *widget.Label
+	change    *canvas.Text
+	chartIcon *widget.Icon
+	separator *widget.Separator
+}
+
+func newCoinListItem() *coinListItem {
+	icon := canvas.NewImageFromResource(theme.BrokenImageIcon())
+	icon.FillMode = canvas.ImageFillContain
+	icon.SetMinSize(fyne.NewSize(26, 26))
+
+	ticker := widget.NewLabel("BTC")
+	ticker.TextStyle = fyne.TextStyle{Bold: true}
+
+	updatedAt := canvas.NewText("--:--:--", theme.Color(theme.ColorNamePlaceHolder))
+	updatedAt.TextSize = theme.CaptionTextSize()
+
+	name := widget.NewLabel("Bitcoin | BTC")
+
+	price := widget.NewLabel("$0.00")
+	price.TextStyle = fyne.TextStyle{Bold: true}
+
+	change := canvas.NewText("+0.00%", color.NRGBA{R: 0x4C, G: 0xAF, B: 0x50, A: 0xFF})
+	change.TextStyle = fyne.TextStyle{Bold: true}
+
+	chartIcon := widget.NewIcon(theme.NewThemedResource(theme.ListIcon()))
+
+	row := container.NewHBox(
+		icon,
+		container.NewVBox(ticker, updatedAt),
+		name,
+		layout.NewSpacer(),
+		price,
+		change,
+		chartIcon,
+	)
+	separator := widget.NewSeparator()
+	content := container.NewVBox(container.NewPadded(row), separator)
+
+	item := &coinListItem{
+		root:      content,
+		icon:      icon,
+		ticker:    ticker,
+		updatedAt: updatedAt,
+		name:      name,
+		price:     price,
+		change:    change,
+		chartIcon: chartIcon,
+		separator: separator,
+	}
+	item.ExtendBaseWidget(item)
+	return item
+}
+
+func (i *coinListItem) CreateRenderer() fyne.WidgetRenderer {
+	return widget.NewSimpleRenderer(i.root)
+}
+
+func (i *coinListItem) applyCoin(
+	coin model.Coin,
+	price string,
+	changeColor color.Color,
+	iconResource fyne.Resource,
+	isLast bool,
+) {
+	i.ticker.SetText(coin.Ticker)
+	i.updatedAt.Text = coin.LastUpdateTime
+	i.updatedAt.Color = theme.Color(theme.ColorNamePlaceHolder)
+	i.updatedAt.Refresh()
+
+	i.name.SetText(fmt.Sprintf("%s | %s", coin.Name, coin.Ticker))
+	i.price.SetText(price)
+	i.change.Text = fmt.Sprintf("%+.2f%%", coin.Change24h)
+	i.change.Color = changeColor
+	i.change.Refresh()
+
+	if iconResource != nil {
+		i.icon.Resource = iconResource
+	} else {
+		i.icon.Resource = theme.BrokenImageIcon()
+	}
+	i.icon.Refresh()
+
+	if isLast {
+		i.separator.Hide()
+	} else {
+		i.separator.Show()
+	}
 }

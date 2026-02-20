@@ -24,7 +24,7 @@
 - [x] Implement fiat currency selector (USD/EUR/RUB)
 
 ### Stage 3: Advanced Features
-- [ ] Implement theme switch (Light/Dark)
+- [x] Implement theme switch (Light/Dark)
 - [ ] Add localization (i18n, RU/EN)
 - [ ] Add refresh button
 - [ ] Implement 60s auto-refresh (goroutine + channel)
