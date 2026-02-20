@@ -25,21 +25,22 @@
 
 ### Stage 3: Advanced Features
 - [x] Implement theme switch (Light/Dark)
-- [ ] Add localization (i18n, RU/EN)
-- [ ] Add refresh button
-- [ ] Implement 60s auto-refresh (goroutine + channel)
-- [ ] Add network error handling (banner/toast, no crash)
-- [ ] Add coin icons to resources
+- [x] Add localization (i18n, RU/EN)
+- [x] Add refresh button
+- [x] Implement 60s auto-refresh (goroutine + channel)
+- [x] Add network error handling (banner/toast, no crash)
+- [x] Add coin icons to resources
 
 ### Stage 4: Polish & Optimization
-- [ ] Loading state (ProgressBarInfinite)
-- [ ] Error state (red status text)
+- [x] Loading state (ProgressBarInfinite)
+- [x] Error state (red status text)
 - [ ] Build binaries for Windows, Linux, macOS
-- [ ] Final testing and bug fixes
+- [x] Final testing and bug fixes
 
 ---
 
 **Следующая задача к выполнению:** Create `GetPrices(currency string)` � console output first
+
 
 
 

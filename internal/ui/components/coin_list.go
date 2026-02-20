@@ -7,6 +7,7 @@ import (
 
 	"cryptoview/internal/model"
 	"cryptoview/internal/ui/assets"
+	"cryptoview/internal/ui/i18n"
 
 	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/canvas"
@@ -16,27 +17,26 @@ import (
 	"fyne.io/fyne/v2/widget"
 )
 
-type FiatCurrency string
-
-const (
-	FiatUSD FiatCurrency = "USD"
-	FiatEUR FiatCurrency = "EUR"
-	FiatRUB FiatCurrency = "RUB"
-)
-
 type CoinListController struct {
-	list     *widget.List
-	data     []model.Coin
-	currency FiatCurrency
-	mu       sync.RWMutex
-	icons    map[string]fyne.Resource
+	list       *widget.List
+	data       []model.Coin
+	currency   i18n.FiatCurrency
+	language   i18n.AppLanguage
+	translator *i18n.Translator
+	mu         sync.RWMutex
+	icons      map[string]fyne.Resource
 }
 
-func NewCoinList(data []model.Coin) *CoinListController {
+func NewCoinList(data []model.Coin, translator *i18n.Translator) *CoinListController {
+	if translator == nil {
+		translator = i18n.NewTranslator(i18n.LangEN)
+	}
 	controller := &CoinListController{
-		data:     data,
-		currency: FiatUSD,
-		icons:    make(map[string]fyne.Resource),
+		data:       data,
+		currency:   i18n.FiatUSD,
+		language:   translator.Language(),
+		translator: translator,
+		icons:      make(map[string]fyne.Resource),
 	}
 
 	controller.list = widget.NewList(
@@ -56,13 +56,15 @@ func NewCoinList(data []model.Coin) *CoinListController {
 			}
 			coin := controller.data[id]
 			currency := controller.currency
+			language := controller.language
 			isLast := int(id) == len(controller.data)-1
 			controller.mu.RUnlock()
 
 			row := item.(*coinListItem)
 			row.applyCoin(
 				coin,
-				formatPriceByCurrency(coin.Price, currency),
+				i18n.FormatPrice(coin.Price, currency, language),
+				i18n.FormatTime(coin.LastUpdateTime, language),
 				changeColor(coin.Change24h),
 				controller.iconForCoin(coin),
 				isLast,
@@ -76,12 +78,21 @@ func (c *CoinListController) Widget() *widget.List {
 	return c.list
 }
 
-func (c *CoinListController) SetCurrency(currency FiatCurrency) {
-	if _, ok := parseFiatCurrency(string(currency)); !ok {
+func (c *CoinListController) SetCurrency(currency i18n.FiatCurrency) {
+	if _, ok := i18n.ParseFiatCurrency(string(currency)); !ok {
 		return
 	}
 	c.mu.Lock()
 	c.currency = currency
+	c.mu.Unlock()
+	fyne.Do(func() {
+		c.list.Refresh()
+	})
+}
+
+func (c *CoinListController) SetLanguage(language i18n.AppLanguage) {
+	c.mu.Lock()
+	c.language = language
 	c.mu.Unlock()
 	fyne.Do(func() {
 		c.list.Refresh()
@@ -118,39 +129,6 @@ func (c *CoinListController) iconForCoin(coin model.Coin) fyne.Resource {
 	c.icons[coin.IconPath] = resource
 	c.mu.Unlock()
 	return resource
-}
-
-func parseFiatCurrency(raw string) (FiatCurrency, bool) {
-	switch FiatCurrency(raw) {
-	case FiatUSD, FiatEUR, FiatRUB:
-		return FiatCurrency(raw), true
-	default:
-		return "", false
-	}
-}
-
-func (f FiatCurrency) APIValue() (string, bool) {
-	switch f {
-	case FiatUSD:
-		return "usd", true
-	case FiatEUR:
-		return "eur", true
-	case FiatRUB:
-		return "rub", true
-	default:
-		return "", false
-	}
-}
-
-func formatPriceByCurrency(price float64, currency FiatCurrency) string {
-	symbol := "$"
-	switch currency {
-	case FiatEUR:
-		symbol = "\u20ac"
-	case FiatRUB:
-		symbol = "\u20bd"
-	}
-	return fmt.Sprintf("%s%.2f", symbol, price)
 }
 
 func changeColor(change24h float64) color.Color {
@@ -243,12 +221,13 @@ func (i *coinListItem) CreateRenderer() fyne.WidgetRenderer {
 func (i *coinListItem) applyCoin(
 	coin model.Coin,
 	price string,
+	formattedTime string,
 	changeColor color.Color,
 	iconResource fyne.Resource,
 	isLast bool,
 ) {
 	i.ticker.SetText(coin.Ticker)
-	i.updatedAt.Text = coin.LastUpdateTime
+	i.updatedAt.Text = formattedTime
 	i.updatedAt.Color = theme.Color(theme.ColorNamePlaceHolder)
 	i.updatedAt.Refresh()
 

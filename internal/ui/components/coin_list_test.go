@@ -6,6 +6,7 @@ import (
 	"testing"
 
 	"cryptoview/internal/model"
+	"cryptoview/internal/ui/i18n"
 	"fyne.io/fyne/v2/test"
 )
 
@@ -14,7 +15,7 @@ func TestNewCoinList(t *testing.T) {
 	defer a.Quit()
 
 	data := model.GetMockCoins()
-	list := NewCoinList(data)
+	list := NewCoinList(data, i18n.NewTranslator(i18n.LangEN))
 	if list == nil {
 		t.Fatal("expected list to be non-nil")
 	}
@@ -35,7 +36,7 @@ func TestCoinListCurrencySwitch(t *testing.T) {
 	a := test.NewApp()
 	defer a.Quit()
 
-	controller := NewCoinList(model.GetMockCoins())
+	controller := NewCoinList(model.GetMockCoins(), i18n.NewTranslator(i18n.LangEN))
 	item := controller.Widget().CreateItem()
 	row := item.(*coinListItem)
 
@@ -44,16 +45,23 @@ func TestCoinListCurrencySwitch(t *testing.T) {
 		t.Fatalf("expected USD symbol, got %q", row.price.Text)
 	}
 
-	controller.SetCurrency(FiatEUR)
+	controller.SetCurrency(i18n.FiatEUR)
 	controller.Widget().UpdateItem(0, item)
 	if !strings.HasPrefix(row.price.Text, "\u20ac") {
 		t.Fatalf("expected EUR symbol, got %q", row.price.Text)
 	}
 
-	controller.SetCurrency(FiatRUB)
+	controller.SetCurrency(i18n.FiatRUB)
 	controller.Widget().UpdateItem(0, item)
 	if !strings.HasPrefix(row.price.Text, "\u20bd") {
 		t.Fatalf("expected RUB symbol, got %q", row.price.Text)
+	}
+
+	controller.SetLanguage(i18n.LangRU)
+	controller.SetCurrency(i18n.FiatUSD)
+	controller.Widget().UpdateItem(0, item)
+	if !strings.Contains(row.price.Text, "$") || !strings.Contains(row.price.Text, ",") {
+		t.Fatalf("expected RU locale price with comma decimal separator, got %q", row.price.Text)
 	}
 }
 
@@ -61,7 +69,7 @@ func TestCoinListChangeColor(t *testing.T) {
 	a := test.NewApp()
 	defer a.Quit()
 
-	controller := NewCoinList(model.GetMockCoins())
+	controller := NewCoinList(model.GetMockCoins(), i18n.NewTranslator(i18n.LangEN))
 	item := controller.Widget().CreateItem()
 	row := item.(*coinListItem)
 
@@ -80,7 +88,7 @@ func TestCoinListLastItemSeparatorHidden(t *testing.T) {
 	a := test.NewApp()
 	defer a.Quit()
 
-	controller := NewCoinList(model.GetMockCoins())
+	controller := NewCoinList(model.GetMockCoins(), i18n.NewTranslator(i18n.LangEN))
 	item := controller.Widget().CreateItem()
 	row := item.(*coinListItem)
 
@@ -95,13 +103,13 @@ func TestReplaceData(t *testing.T) {
 	a := test.NewApp()
 	defer a.Quit()
 
-	controller := NewCoinList(model.GetMockCoins())
+	controller := NewCoinList(model.GetMockCoins(), i18n.NewTranslator(i18n.LangEN))
 	newData := []model.Coin{
 		{ID: "bitcoin", Name: "Bitcoin", Ticker: "BTC", Price: 1, Change24h: 0.1, LastUpdateTime: "10:11:12"},
 	}
 
 	controller.ReplaceData(newData)
-	controller.SetCurrency(FiatUSD)
+	controller.SetCurrency(i18n.FiatUSD)
 
 	if got := controller.Widget().Length(); got != 1 {
 		t.Fatalf("expected list length 1 after replace, got %d", got)
