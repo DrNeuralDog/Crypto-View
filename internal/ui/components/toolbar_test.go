@@ -24,9 +24,9 @@ func TestToolbarCurrencyAndLanguageCallbacks(t *testing.T) {
 		t.Fatalf("expected currency callback %q, got %q", FiatEUR, gotCurrency)
 	}
 
-	toolbar.LanguageSelect().SetSelected("ENG")
-	if gotLanguage != "ENG" {
-		t.Fatalf("expected language callback ENG, got %q", gotLanguage)
+	toolbar.LanguageSelect().SetSelected("RU")
+	if gotLanguage != "RU" {
+		t.Fatalf("expected language callback RU, got %q", gotLanguage)
 	}
 }
 

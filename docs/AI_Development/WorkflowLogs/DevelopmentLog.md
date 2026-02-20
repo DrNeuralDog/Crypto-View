@@ -36,3 +36,6 @@
 [2026-02-20 21:34:55] Fine-tuned coin time text alignment per user feedback: removed dynamic horizontal time indent so timestamp starts under ticker left edge; adjusted vertical gap to ~5px below ticker/name line - Success (go test/build/build.ps1 passed).
 [2026-02-20 21:38:23] Adjusted coin timestamp alignment: set updatedAt text leading alignment and replaced default VBox with custom vGapLayout (exact 1px gap) so time starts at same left edge as ticker and sits 1px below top row - Success.
 [2026-02-20 21:41:04] Fine-tuned timestamp row per user request: reduced vertical gap from 1 to 0.5 and shifted time row 6px to the right; locked window size with SetFixedSize(true) to disable resize/maximize - Success (go test/build/build.ps1 passed).
+[2026-02-20 22:05:30] Loaded full project context on user request: re-read AGENTS.md, all .cursor/rules, AI_Development docs/logs, and active UI files (coin_list/main_window) - Success.
+[2026-02-20 22:08:37] Completed /sync_logs: replaced DevelopmentLog.md, BugLog.md, GitLog.md, UserInteractionLog.md sources in NotebookLM (7fa1e693-e081-4415-832c-69c96d1350bb) and verified presence - Success.
+[2026-02-20 22:11:19] UI language selector fix: replaced EN/ENG with EN/RU in toolbar and updated toolbar language callback test; validated with go test ./internal/ui/components and go test ./... - Success.

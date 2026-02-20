@@ -45,7 +45,7 @@ func NewToolbar(
 	})
 	currencySelect.SetSelected(string(FiatUSD))
 
-	langSelect := widget.NewSelect([]string{"EN", "ENG"}, func(selected string) {
+	langSelect := widget.NewSelect([]string{"EN", "RU"}, func(selected string) {
 		if onLanguageChanged != nil {
 			onLanguageChanged(selected)
 		}
