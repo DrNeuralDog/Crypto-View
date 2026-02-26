@@ -290,7 +290,7 @@ flowchart TD
     Feed --> MarketSnap
     Feed -->|transforms snapshots into| Coin
     Feed -->|OnMarketUpdate model.Coin slice| CoinList
-    Feed -->|OnStatus(StatusEvent)| Footer
+    Feed -->|OnStatus status event| Footer
 
     MarketProviders --> CG
     MarketProviders --> CRC

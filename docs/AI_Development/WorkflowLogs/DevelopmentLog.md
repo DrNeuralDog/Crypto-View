@@ -58,3 +58,4 @@
 [2026-02-26 22:04:13] Updated README with explicit educational AI-assisted project context (AGENTS.md + .cursor/rules value proposition), added docs/designs/CryptoView_DevTimeComparison.gif, and adjusted CryptoView_TimeComparison.gif header left by ~5% per user feedback - Success.
 [2026-02-26 22:10:34] Fixed layout overflow issues in README development-time GIF: wrapped 'Repomix plus code inspection for context' onto two lines and shortened left estimate label to hours-only to prevent text clipping - Success.
 [2026-02-26 22:13:06] Fixed second Mermaid parser issue in README architecture diagram by replacing edge label 'OnStatus(StatusEvent)' with Mermaid-safe text without parentheses - Success.
+[2026-02-26 22:15:54] Re-applied Mermaid architecture diagram fix in README.md after detecting stale line persisted: replaced 'OnStatus(StatusEvent)' with 'OnStatus status event' - Success.
