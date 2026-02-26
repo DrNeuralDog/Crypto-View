@@ -1,4 +1,4 @@
-# CryptoView
+# Crypto View - Testing contextual engineering
 
 <p align="left">
   <img src="resources/Logo/CryptoView%20Logo.png" alt="CryptoView Logo" width="560" />
@@ -28,12 +28,12 @@ Add API hiccups or rate limits, and the flow becomes even slower.
 - source status feedback in the footer
 - provider fallback + cached data warnings when network/API issues happen
 
-| Before CryptoView | After CryptoView |
-| --- | --- |
-| Multiple tabs/exchanges and manual search | One compact desktop window with tracked coins |
-| Manual crypto-to-fiat conversion checks | Instant fiat switch (`USD/EUR/RUB`) |
+| Before CryptoView                              | After CryptoView                                   |
+| ---------------------------------------------- | -------------------------------------------------- |
+| Multiple tabs/exchanges and manual search      | One compact desktop window with tracked coins      |
+| Manual crypto-to-fiat conversion checks        | Instant fiat switch (`USD/EUR/RUB`)              |
 | No clear source health / rate-limit visibility | Footer status shows loading / OK / warning / error |
-| Broken flow when one API fails | Fallback providers + cached snapshot behavior |
+| Broken flow when one API fails                 | Fallback providers + cached snapshot behavior      |
 
 ## ⏳ Speed Comparison
 
@@ -67,7 +67,7 @@ Add API hiccups or rate limits, and the flow becomes even slower.
 - **Tested Modules:** The repository includes tests for API/client behavior, feed fallback logic, i18n, UI components, footer states, and custom theme behavior.
 - **AI-Workflow Experiment:** The project is intentionally interesting not only as an app, but also as a documented example of rule-driven AI-assisted development.
 
-## 🤖 AI-Assisted Development Context
+## AI-Assisted Development Context
 
 CryptoView is a **working desktop app**, but it is also a **study project** about effective AI usage in development.
 

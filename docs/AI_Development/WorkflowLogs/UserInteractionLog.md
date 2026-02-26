@@ -52,3 +52,5 @@
 [2026-02-26 21:51:57] User requested additional GIF title alignment/spacing polish (move header text right and enlarge gap below title) - Regenerated CryptoView_TimeComparison.gif.
 [2026-02-26 21:54:58] User requested final GIF header alignment tweak (shift title block left by ~7%) - Regenerated CryptoView_TimeComparison.gif.
 [2026-02-26 22:04:13] User requested final GIF title alignment shift and README additions clarifying educational AI-assisted workflow focus with AGENTS/rules, plus a second development-time comparison GIF - Implemented.
+[2026-02-26 22:10:34] User reported overflow in second README GIF (right-column context line and left-column time estimate) - GIF regenerated with wrapped text and hours-only label.
+[2026-02-26 22:13:06] User reported another GitHub Mermaid parse error in README architecture diagram (OnStatus label) - Fixed edge label syntax.

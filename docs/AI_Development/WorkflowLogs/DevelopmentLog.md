@@ -56,3 +56,5 @@
 [2026-02-26 21:51:57] Adjusted README speed-comparison GIF header alignment per user feedback: shifted both title lines right (~15%) and increased vertical spacing below title area - Success.
 [2026-02-26 21:54:58] Fine-tuned README GIF header positioning again per user feedback: moved two-line title block left by ~7% while keeping enlarged lower spacing intact - Success.
 [2026-02-26 22:04:13] Updated README with explicit educational AI-assisted project context (AGENTS.md + .cursor/rules value proposition), added docs/designs/CryptoView_DevTimeComparison.gif, and adjusted CryptoView_TimeComparison.gif header left by ~5% per user feedback - Success.
+[2026-02-26 22:10:34] Fixed layout overflow issues in README development-time GIF: wrapped 'Repomix plus code inspection for context' onto two lines and shortened left estimate label to hours-only to prevent text clipping - Success.
+[2026-02-26 22:13:06] Fixed second Mermaid parser issue in README architecture diagram by replacing edge label 'OnStatus(StatusEvent)' with Mermaid-safe text without parentheses - Success.
