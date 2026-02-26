@@ -38,3 +38,8 @@
 [2026-02-20 22:11:19] User requested UI combobox correction from EN/ENG to EN/RU - Completed and validated with tests.
 [2026-02-20 22:26:28] User requested full implementation of Day 4 closeout plan (Stage 3+4) including i18n, refresh/auto-refresh, loading/error UX, and multi-platform builds - Implemented; tests/build passed, windows+linux artifacts produced, darwin build blocked by missing cross-cgo toolchain.
 [2026-02-20 22:28:05] Automatic /sync_logs executed after Day 4 implementation - Completed: workflow logs replaced and verified in NotebookLM.
+[2026-02-26 17:11:23] User requested project/rules context loading and Windows EXE icon embedding in build.ps1/build_all_os.ps1 using resources/Logo/CryptoView Icon.png - Implemented and validated with local build.ps1 run.
+[2026-02-26 17:26:07] User reported previous EXE icon fix did not work and provided rsrc-based example script from another Fyne project - Implemented analogous rsrc/.syso solution in CryptoView build scripts and validated build.
+[2026-02-26 17:36:31] User reported build_all_os.ps1 failure on darwin/amd64 (gcc -arch) from Windows - Added pre-skip for unsupported macOS CGO cross-build and validated script completion.
+[2026-02-26 18:35:47] User requested project-rules/context review and UI tweak: align extended coin names in list to one left edge based on widest ticker column (e.g., DOGE) - Completed analysis and implemented alignment fix with local component tests passing.
+[2026-02-26 18:43:54] User reported coin-name alignment fix had no visible effect; follow-up fix requested - Implemented spacer-based alignment compensation and re-tested component.

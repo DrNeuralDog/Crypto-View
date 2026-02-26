@@ -25,6 +25,7 @@ type CoinListController struct {
 	translator *i18n.Translator
 	mu         sync.RWMutex
 	icons      map[string]fyne.Resource
+	tickerW    float32
 }
 
 func NewCoinList(data []model.Coin, translator *i18n.Translator) *CoinListController {
@@ -37,6 +38,7 @@ func NewCoinList(data []model.Coin, translator *i18n.Translator) *CoinListContro
 		language:   translator.Language(),
 		translator: translator,
 		icons:      make(map[string]fyne.Resource),
+		tickerW:    maxTickerWidth(data),
 	}
 
 	controller.list = widget.NewList(
@@ -57,6 +59,7 @@ func NewCoinList(data []model.Coin, translator *i18n.Translator) *CoinListContro
 			coin := controller.data[id]
 			currency := controller.currency
 			language := controller.language
+			tickerW := controller.tickerW
 			isLast := int(id) == len(controller.data)-1
 			controller.mu.RUnlock()
 
@@ -67,6 +70,7 @@ func NewCoinList(data []model.Coin, translator *i18n.Translator) *CoinListContro
 				i18n.FormatTime(coin.LastUpdateTime, language),
 				changeColor(coin.Change24h),
 				controller.iconForCoin(coin),
+				tickerW,
 				isLast,
 			)
 		},
@@ -102,6 +106,7 @@ func (c *CoinListController) SetLanguage(language i18n.AppLanguage) {
 func (c *CoinListController) ReplaceData(coins []model.Coin) {
 	c.mu.Lock()
 	c.data = coins
+	c.tickerW = maxTickerWidth(coins)
 	c.mu.Unlock()
 	fyne.Do(func() {
 		c.list.Refresh()
@@ -141,12 +146,31 @@ func changeColor(change24h float64) color.Color {
 	return color.NRGBA{R: 128, G: 128, B: 128, A: 255}
 }
 
+func maxTickerWidth(coins []model.Coin) float32 {
+	base := widget.NewLabel("BTC")
+	base.TextStyle = fyne.TextStyle{Bold: true}
+	maxWidth := base.MinSize().Width
+	for _, coin := range coins {
+		if coin.Ticker == "" {
+			continue
+		}
+		lbl := widget.NewLabel(coin.Ticker)
+		lbl.TextStyle = fyne.TextStyle{Bold: true}
+		width := lbl.MinSize().Width
+		if width > maxWidth {
+			maxWidth = width
+		}
+	}
+	return maxWidth
+}
+
 type coinListItem struct {
 	widget.BaseWidget
 
 	root      *fyne.Container
 	icon      *canvas.Image
 	ticker    *widget.Label
+	namePad   *canvas.Rectangle
 	updatedAt *canvas.Text
 	name      *widget.Label
 	price     *widget.Label
@@ -162,6 +186,8 @@ func newCoinListItem() *coinListItem {
 
 	ticker := widget.NewLabel("BTC")
 	ticker.TextStyle = fyne.TextStyle{Bold: true}
+	namePad := canvas.NewRectangle(color.Transparent)
+	namePad.SetMinSize(fyne.NewSize(0, 1))
 
 	updatedAt := canvas.NewText("--:--:--", theme.Color(theme.ColorNamePlaceHolder))
 	updatedAt.TextSize = theme.CaptionTextSize()
@@ -181,6 +207,7 @@ func newCoinListItem() *coinListItem {
 	mainInfo := container.NewHBox(
 		ticker,
 		spacerX(8),
+		namePad,
 		name,
 	)
 	//timeRow := container.NewHBox(spacerX(1), updatedAt)
@@ -203,6 +230,7 @@ func newCoinListItem() *coinListItem {
 		root:      content,
 		icon:      icon,
 		ticker:    ticker,
+		namePad:   namePad,
 		updatedAt: updatedAt,
 		name:      name,
 		price:     price,
@@ -224,9 +252,19 @@ func (i *coinListItem) applyCoin(
 	formattedTime string,
 	changeColor color.Color,
 	iconResource fyne.Resource,
+	tickerW float32,
 	isLast bool,
 ) {
 	i.ticker.SetText(coin.Ticker)
+	if tickerW > 0 {
+		currentTickerW := i.ticker.MinSize().Width
+		padW := tickerW - currentTickerW
+		if padW < 0 {
+			padW = 0
+		}
+		i.namePad.SetMinSize(fyne.NewSize(padW, 1))
+		i.namePad.Refresh()
+	}
 	i.updatedAt.Text = formattedTime
 	i.updatedAt.Color = theme.Color(theme.ColorNamePlaceHolder)
 	i.updatedAt.Refresh()
@@ -249,6 +287,9 @@ func (i *coinListItem) applyCoin(
 	} else {
 		i.separator.Show()
 	}
+
+	// Force parent row relayout so ticker fixed-width column changes affect name alignment.
+	i.Refresh()
 }
 
 func spacerX(width float32) fyne.CanvasObject {
