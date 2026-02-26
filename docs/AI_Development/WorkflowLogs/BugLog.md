@@ -15,3 +15,4 @@
 [2026-02-26 17:26:07] Windows EXE icon embedding via fyne package did not produce reliable result (CLI flag mismatch + source-dir rebuild issue) - Switched build scripts to rsrc-based .syso embedding and rebuilt successfully.
 [2026-02-26 18:35:47] UI coin rows: extended coin title labels ('Name | Ticker') started at different X positions because ticker labels had variable widths - Fixed by measuring max ticker width and using a fixed-width ticker column in coin_list rows.
 [2026-02-26 18:43:54] Initial ticker-column alignment approach (custom layout container) did not visibly affect coin name positions in Fyne runtime - Replaced with explicit dynamic spacer before name label using max/current ticker MinSize delta.
+[2026-02-26 19:36:08] Fixed repeated refresh/currency-switch market requests causing CoinGecko 429 lockup: decoupled fiat switch from HTTP, added fallback providers and cached offline fiat conversion - Success.

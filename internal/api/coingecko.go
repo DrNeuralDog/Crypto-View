@@ -6,7 +6,9 @@ import (
 	"fmt"
 	"net/http"
 	"net/url"
+	"strconv"
 	"strings"
+	"time"
 
 	"cryptoview/internal/model"
 )
@@ -39,7 +41,17 @@ func (c *Client) GetMarkets(ctx context.Context, fiat string) ([]model.CoinGecko
 	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusOK {
-		return nil, fmt.Errorf("coingecko status: %d", resp.StatusCode)
+		statusErr := &StatusError{StatusCode: resp.StatusCode}
+		if retryAfter := strings.TrimSpace(resp.Header.Get("Retry-After")); retryAfter != "" {
+			if secs, err := strconv.Atoi(retryAfter); err == nil && secs > 0 {
+				statusErr.RetryAfter = time.Duration(secs) * time.Second
+			} else if when, err := http.ParseTime(retryAfter); err == nil {
+				if d := time.Until(when); d > 0 {
+					statusErr.RetryAfter = d
+				}
+			}
+		}
+		return nil, statusErr
 	}
 
 	var markets []model.CoinGeckoMarket

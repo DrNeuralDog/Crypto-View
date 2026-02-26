@@ -58,3 +58,43 @@ func TestToCoinInvalidTimestamp(t *testing.T) {
 		t.Fatalf("expected fallback time, got %s", coin.LastUpdateTime)
 	}
 }
+
+func TestToCoinEmptyLastUpdated(t *testing.T) {
+	src := CoinGeckoMarket{
+		ID:                       "bitcoin",
+		Symbol:                   "btc",
+		Name:                     "Bitcoin",
+		CurrentPrice:             123.45,
+		PriceChangePercentage24h: 2.34,
+		LastUpdated:              "",
+	}
+
+	coin := ToCoin(src)
+	if coin.LastUpdateTime != "--:--:--" {
+		t.Fatalf("expected fallback for empty last updated, got %s", coin.LastUpdateTime)
+	}
+}
+
+func TestIconPathForID(t *testing.T) {
+	tests := []struct {
+		id   string
+		want string
+	}{
+		{"bitcoin", "resources/coins/bitcoin.png"},
+		{"ethereum", "resources/coins/ethereum.png"},
+		{"the-open-network", "resources/coins/the-open-network.png"},
+		{"toncoin", "resources/coins/the-open-network.png"},
+		{"solana", "resources/coins/solana.png"},
+		{"dogecoin", "resources/coins/dogecoin.png"},
+		{"ripple", "resources/coins/ripple.png"},
+		{"litecoin", "resources/coins/litecoin.png"},
+		{"unknown-coin", ""},
+		{"", ""},
+	}
+	for _, tt := range tests {
+		got := IconPathForID(tt.id)
+		if got != tt.want {
+			t.Errorf("IconPathForID(%q) = %q, want %q", tt.id, got, tt.want)
+		}
+	}
+}

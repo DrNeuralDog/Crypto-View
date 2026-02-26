@@ -54,6 +54,10 @@ func iconPathForID(id string) string {
 	return ""
 }
 
+func IconPathForID(id string) string {
+	return iconPathForID(id)
+}
+
 func formatLastUpdated(raw string) string {
 	if raw == "" {
 		return "--:--:--"

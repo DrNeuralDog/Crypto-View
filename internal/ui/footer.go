@@ -15,6 +15,7 @@ type FooterState string
 const (
 	FooterStateLoading FooterState = "loading"
 	FooterStateOK      FooterState = "ok"
+	FooterStateWarning FooterState = "warning"
 	FooterStateError   FooterState = "error"
 )
 
@@ -90,8 +91,20 @@ func (f *FooterController) SetOK() {
 	f.applyState()
 }
 
+func (f *FooterController) SetOKWithMessage(msg string) {
+	f.state = FooterStateOK
+	f.customText = msg
+	f.applyState()
+}
+
 func (f *FooterController) SetError(msg string) {
 	f.state = FooterStateError
+	f.customText = msg
+	f.applyState()
+}
+
+func (f *FooterController) SetWarning(msg string) {
+	f.state = FooterStateWarning
 	f.customText = msg
 	f.applyState()
 }
@@ -122,10 +135,27 @@ func (f *FooterController) applyState() {
 		f.progress.Stop()
 		f.progress.Hide()
 		f.progressWrap.Hide()
+	case FooterStateWarning:
+		f.indicator.FillColor = color.NRGBA{R: 0xFF, G: 0x98, B: 0x00, A: 0xFF}
+		f.indicator.Refresh()
+		message := f.customText
+		if message == "" {
+			message = f.translator.T("status.warning.cached")
+		}
+		f.statusValue.Text = message
+		f.statusValue.Color = color.NRGBA{R: 0xFF, G: 0x98, B: 0x00, A: 0xFF}
+		f.statusValue.Refresh()
+		f.progress.Stop()
+		f.progress.Hide()
+		f.progressWrap.Hide()
 	default:
 		f.indicator.FillColor = color.NRGBA{R: 0x4C, G: 0xAF, B: 0x50, A: 0xFF}
 		f.indicator.Refresh()
-		f.statusValue.Text = f.translator.T("status.ok")
+		message := f.customText
+		if message == "" {
+			message = f.translator.T("status.ok")
+		}
+		f.statusValue.Text = message
 		f.statusValue.Color = color.NRGBA{R: 0x4C, G: 0xAF, B: 0x50, A: 0xFF}
 		f.statusValue.Refresh()
 		f.progress.Stop()

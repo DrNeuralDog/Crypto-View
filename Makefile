@@ -1,4 +1,7 @@
-.PHONY: build build-all run clean
+.PHONY: build build-all run clean test
+
+test:
+	go test ./... -v -count=1
 
 build:
 	mkdir -p bin

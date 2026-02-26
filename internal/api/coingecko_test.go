@@ -4,6 +4,7 @@ import (
 	"context"
 	"net/http"
 	"net/http/httptest"
+	"strings"
 	"testing"
 	"time"
 )
@@ -50,6 +51,23 @@ func TestGetMarketsStatusError(t *testing.T) {
 	_, err := client.GetMarkets(context.Background(), "usd")
 	if err == nil {
 		t.Fatal("expected error for non-200 status")
+	}
+}
+
+func TestGetMarketsUnsupportedCurrency(t *testing.T) {
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusOK)
+		_, _ = w.Write([]byte(`[]`))
+	}))
+	defer srv.Close()
+
+	client := newClient(srv.URL, time.Second)
+	_, err := client.GetMarkets(context.Background(), "GBP")
+	if err == nil {
+		t.Fatal("expected error for unsupported currency GBP")
+	}
+	if !strings.Contains(err.Error(), "unsupported") {
+		t.Fatalf("expected unsupported currency message, got %v", err)
 	}
 }
 

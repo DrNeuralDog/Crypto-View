@@ -1,14 +1,12 @@
 package ui
 
 import (
-	"context"
-	"log"
+	"strings"
 	"sync"
 	"sync/atomic"
-	"time"
 
-	"cryptoview/internal/api"
 	"cryptoview/internal/model"
+	"cryptoview/internal/service/marketfeed"
 	"cryptoview/internal/ui/assets"
 	"cryptoview/internal/ui/components"
 	"cryptoview/internal/ui/i18n"
@@ -31,69 +29,45 @@ func BuildMainWindow(a fyne.App, data []model.Coin) fyne.Window {
 	}
 	w.SetIcon(appIcon)
 
-	apiClient := api.NewClient(10 * time.Second)
 	coinList := components.NewCoinList(data, translator)
 	footer := NewFooterController(translator)
 
 	currentCurrency := i18n.FiatUSD
 	currentLanguage := i18n.LangEN
-	var requestID int64
-	var fetchInFlight atomic.Bool
 	var header *components.Toolbar
-
-	triggerFetch := func(reason string, force bool) {
-		_ = reason
-		if !force && !fetchInFlight.CompareAndSwap(false, true) {
-			return
-		}
-		if force {
-			fetchInFlight.Store(true)
-		}
-
-		apiValue, ok := currentCurrency.APIValue()
-		if !ok {
-			fetchInFlight.Store(false)
-			return
-		}
-
-		fyne.Do(func() {
-			footer.SetLoading()
-		})
-
-		id := atomic.AddInt64(&requestID, 1)
-		go func(localID int64) {
-			defer fetchInFlight.Store(false)
-
-			ctx, cancel := context.WithTimeout(context.Background(), 12*time.Second)
-			defer cancel()
-
-			markets, err := apiClient.GetMarkets(ctx, apiValue)
-			if err != nil {
-				log.Printf("fetch markets failed for %s: %v", apiValue, err)
-				if atomic.LoadInt64(&requestID) != localID {
-					return
-				}
-				fyne.Do(func() {
-					footer.SetError(translator.T("status.error.network"))
-				})
-				return
-			}
-
-			coins := make([]model.Coin, 0, len(markets))
-			for _, market := range markets {
-				coins = append(coins, model.ToCoin(market))
-			}
-
-			if atomic.LoadInt64(&requestID) != localID {
-				return
-			}
-
+	var statusEventID int64
+	feed := marketfeed.NewDefault(marketfeed.Callbacks{
+		OnMarketUpdate: func(coins []model.Coin) {
 			fyne.Do(func() {
 				coinList.ReplaceData(coins)
-				footer.SetOK()
 			})
-		}(id)
-	}
+		},
+		OnStatus: func(event marketfeed.StatusEvent) {
+			localID := atomic.AddInt64(&statusEventID, 1)
+			fyne.Do(func() {
+				if atomic.LoadInt64(&statusEventID) != localID {
+					return
+				}
+				switch event.Kind {
+				case marketfeed.StatusKindLoading:
+					footer.SetLoading()
+				case marketfeed.StatusKindOK:
+					footer.SetOKWithMessage(okStatusMessage(translator, event.Provider))
+				case marketfeed.StatusKindWarning:
+					switch event.Code {
+					case marketfeed.StatusCodeRateLimited:
+						footer.SetWarning(translator.T("status.warning.rate"))
+					case marketfeed.StatusCodeFallback:
+						footer.SetOKWithMessage(okStatusMessage(translator, event.Provider))
+					default:
+						footer.SetWarning(translator.T("status.warning.cached"))
+					}
+				default:
+					footer.SetError(translator.T("status.error.network"))
+				}
+			})
+		},
+	})
 
 	header = components.NewToolbar(
 		a,
@@ -101,7 +75,7 @@ func BuildMainWindow(a fyne.App, data []model.Coin) fyne.Window {
 		func(currency i18n.FiatCurrency) {
 			currentCurrency = currency
 			coinList.SetCurrency(currency)
-			triggerFetch("currency", true)
+			feed.SetFiat(currency)
 		},
 		nil,
 		func(language i18n.AppLanguage) {
@@ -114,9 +88,6 @@ func BuildMainWindow(a fyne.App, data []model.Coin) fyne.Window {
 			footer.SetLanguage(language)
 			w.SetTitle(translator.T("app.title"))
 		},
-		func() {
-			triggerFetch("manual", true)
-		},
 	)
 
 	content := container.NewBorder(header.CanvasObject(), footer.CanvasObject(), nil, nil, coinList.Widget())
@@ -124,30 +95,52 @@ func BuildMainWindow(a fyne.App, data []model.Coin) fyne.Window {
 	coinList.SetCurrency(currentCurrency)
 	coinList.SetLanguage(currentLanguage)
 	footer.SetLoading()
-	triggerFetch("initial", true)
+	feed.Start()
 
-	refreshTicker := time.NewTicker(60 * time.Second)
-	stopCh := make(chan struct{})
 	var stopOnce sync.Once
-
-	go func() {
-		for {
-			select {
-			case <-refreshTicker.C:
-				triggerFetch("auto", false)
-			case <-stopCh:
-				return
-			}
-		}
-	}()
 
 	w.SetCloseIntercept(func() {
 		stopOnce.Do(func() {
-			refreshTicker.Stop()
-			close(stopCh)
+			feed.Stop()
 		})
 		w.Close()
 	})
 
 	return w
+}
+
+func okStatusMessage(translator *i18n.Translator, provider string) string {
+	base := "OK"
+	if translator != nil {
+		base = translator.T("status.ok")
+	}
+	name := providerDisplayName(provider)
+	if name == "" {
+		return base
+	}
+	return base + " • " + name
+}
+
+func providerDisplayName(provider string) string {
+	switch strings.ToLower(strings.TrimSpace(provider)) {
+	case "coingecko":
+		return "CoinGecko"
+	case "coincap":
+		return "CoinCap"
+	case "coinpaprika":
+		return "CoinPaprika"
+	case "cryptocompare":
+		return "CryptoCompare"
+	case "binance":
+		return "Binance"
+	case "coinlore":
+		return "CoinLore"
+	case "open-er-api":
+		return "Open ER API"
+	default:
+		if provider == "" {
+			return ""
+		}
+		return provider
+	}
 }

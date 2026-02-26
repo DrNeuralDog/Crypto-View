@@ -33,12 +33,32 @@ func TestFooterControllerStates(t *testing.T) {
 		t.Fatalf("expected red error color, got %+v", got)
 	}
 
+	footer.SetWarning("Cached")
+	if footer.statusValue.Text != "Cached" {
+		t.Fatalf("expected warning text, got %q", footer.statusValue.Text)
+	}
+	if got := asNRGBA(footer.statusValue.Color); got != (color.NRGBA{R: 0xFF, G: 0x98, B: 0x00, A: 0xFF}) {
+		t.Fatalf("expected amber warning color, got %+v", got)
+	}
+
 	footer.SetOK()
 	if footer.statusValue.Text != "OK" {
 		t.Fatalf("expected OK text, got %q", footer.statusValue.Text)
 	}
 	if footer.progress.Visible() {
 		t.Fatal("expected progress hidden in OK state")
+	}
+}
+
+func TestFooterOKCustomMessage(t *testing.T) {
+	a := test.NewApp()
+	defer a.Quit()
+
+	footer := NewFooterController(i18n.NewTranslator(i18n.LangEN))
+	footer.SetOKWithMessage("OK • CoinCap")
+
+	if footer.statusValue.Text != "OK • CoinCap" {
+		t.Fatalf("expected custom OK text, got %q", footer.statusValue.Text)
 	}
 }
 
@@ -55,6 +75,18 @@ func TestFooterLanguageSwitch(t *testing.T) {
 	}
 	if footer.statusValue.Text != "Загрузка..." {
 		t.Fatalf("expected localized loading text, got %q", footer.statusValue.Text)
+	}
+}
+
+func TestFooterWarningFallbackText(t *testing.T) {
+	a := test.NewApp()
+	defer a.Quit()
+
+	footer := NewFooterController(i18n.NewTranslator(i18n.LangRU))
+	footer.SetWarning("")
+
+	if footer.statusValue.Text != "Оффлайн, используются кешированные данные" {
+		t.Fatalf("expected localized default warning text, got %q", footer.statusValue.Text)
 	}
 }
 

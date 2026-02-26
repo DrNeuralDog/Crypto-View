@@ -43,3 +43,7 @@
 [2026-02-26 17:36:31] User reported build_all_os.ps1 failure on darwin/amd64 (gcc -arch) from Windows - Added pre-skip for unsupported macOS CGO cross-build and validated script completion.
 [2026-02-26 18:35:47] User requested project-rules/context review and UI tweak: align extended coin names in list to one left edge based on widest ticker column (e.g., DOGE) - Completed analysis and implemented alignment fix with local component tests passing.
 [2026-02-26 18:43:54] User reported coin-name alignment fix had no visible effect; follow-up fix requested - Implemented spacer-based alignment compensation and re-tested component.
+[2026-02-26 19:36:08] User requested implementation of no-refresh auto-update with provider fallback and offline fiat recalculation after discussing 429/rate limits - Implemented and validated with go test ./...
+[2026-02-26 19:52:33] User requested console logging of crypto data request attempts due to runtime suspicions - Implemented and validated with go test ./internal/service/marketfeed
+[2026-02-26 19:59:16] User requested 1s provider timeouts and replacement of CoinCap/CoinPaprika due to runtime timeout/402 issues - Implemented with CryptoCompare and Binance fallback chain.
+[2026-02-26 20:25:47] User requested implementation of a polished README for CryptoView (Go Do-like structure) with logo, UI screenshots, two Mermaid flow diagrams, and GIF speed comparison animation - Implemented README.md and generated local GIF asset.
