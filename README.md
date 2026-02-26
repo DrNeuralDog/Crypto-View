@@ -12,6 +12,8 @@
 **CryptoView** is a compact desktop crypto price viewer built with **Go + Fyne**.
 It focuses on quick crypto-to-fiat checks with **live updates**, **provider fallback**, **cached data behavior**, and a clean **light/dark UI**.
 
+This is also an **educational AI-assisted development project**: beyond the app itself, a major goal was to explore how far a structured AI workflow can accelerate delivery when the project has strong guidance artifacts (`AGENTS.md`, `.cursor/rules/*`, and supporting docs).
+
 ## The Problem & The Fix
 
 Checking crypto prices manually is usually a small task that turns into a noisy workflow:
@@ -63,6 +65,31 @@ Add API hiccups or rate limits, and the flow becomes even slower.
 - **Resilience-Oriented Feed:** Cooldowns, retry windows, fallback providers, and cached snapshots improve usability.
 - **Clean Separation of Concerns:** UI controllers, model types, market feed orchestration, providers, i18n, and theme code are clearly split.
 - **Tested Modules:** The repository includes tests for API/client behavior, feed fallback logic, i18n, UI components, footer states, and custom theme behavior.
+- **AI-Workflow Experiment:** The project is intentionally interesting not only as an app, but also as a documented example of rule-driven AI-assisted development.
+
+## 🤖 AI-Assisted Development Context
+
+CryptoView is a **working desktop app**, but it is also a **study project** about effective AI usage in development.
+
+The idea was to validate a workflow where speed comes not only from the model itself, but from:
+
+- explicit agent instructions in `AGENTS.md`
+- project-specific rules in `.cursor/rules/*`
+- structured docs/context artifacts (including packed repo context via repomix)
+- iterative human review + targeted corrections
+
+In other words: the app matters, but the **process assets** (rules, agent instructions, workflow discipline) are a core part of the outcome and a big reason the iteration speed is high.
+
+### ⏱️ Development Time Comparison (Illustrative)
+
+![CryptoView development time comparison](docs/designs/CryptoView_DevTimeComparison.gif)
+
+For this scope (app + UI polish + tests/docs + README assets):
+
+- **With AI-assisted workflow (including setup and prompting): ~5 hours total**
+- **Manual solo implementation estimate: ~24-40 hours (~3-5 working days)**
+
+> Estimate note: this is an approximate comparison for a competent solo developer building and polishing a similar result manually. Actual time depends on experience with Go/Fyne, API integration speed, and documentation standards.
 
 ## Technical Details
 
@@ -262,7 +289,7 @@ flowchart TD
     Feed --> FXProvider
     Feed --> MarketSnap
     Feed -->|transforms snapshots into| Coin
-    Feed -->|OnMarketUpdate([]model.Coin)| CoinList
+    Feed -->|OnMarketUpdate model.Coin slice| CoinList
     Feed -->|OnStatus(StatusEvent)| Footer
 
     MarketProviders --> CG
@@ -300,6 +327,7 @@ The repository includes tests around:
 ## Project Notes
 
 - This is a **learning / portfolio-quality desktop app** that demonstrates Go + Fyne UI work, provider integration, and resilience-oriented update flows.
+- It is also a **workflow experiment in AI-assisted engineering**, where `AGENTS.md` + `.cursor/rules/*` are intentionally part of the project's value.
 - **Not financial advice.** CryptoView is an informational viewer for quick price checks.
 
 ---

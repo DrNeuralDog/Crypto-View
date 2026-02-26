@@ -47,3 +47,8 @@
 [2026-02-26 19:52:33] User requested console logging of crypto data request attempts due to runtime suspicions - Implemented and validated with go test ./internal/service/marketfeed
 [2026-02-26 19:59:16] User requested 1s provider timeouts and replacement of CoinCap/CoinPaprika due to runtime timeout/402 issues - Implemented with CryptoCompare and Binance fallback chain.
 [2026-02-26 20:25:47] User requested implementation of a polished README for CryptoView (Go Do-like structure) with logo, UI screenshots, two Mermaid flow diagrams, and GIF speed comparison animation - Implemented README.md and generated local GIF asset.
+[2026-02-26 21:26:30] User reported GitHub Mermaid render error in README architecture diagram - Fixed invalid edge label syntax in README.md.
+[2026-02-26 21:33:31] User requested visual polish of README speed comparison GIF title layout and spacing - GIF regenerated with two-line header and increased gap above comparison panels.
+[2026-02-26 21:51:57] User requested additional GIF title alignment/spacing polish (move header text right and enlarge gap below title) - Regenerated CryptoView_TimeComparison.gif.
+[2026-02-26 21:54:58] User requested final GIF header alignment tweak (shift title block left by ~7%) - Regenerated CryptoView_TimeComparison.gif.
+[2026-02-26 22:04:13] User requested final GIF title alignment shift and README additions clarifying educational AI-assisted workflow focus with AGENTS/rules, plus a second development-time comparison GIF - Implemented.
