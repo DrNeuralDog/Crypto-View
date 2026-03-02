@@ -16,7 +16,27 @@ import (
 	"fyne.io/fyne/v2/theme"
 )
 
+type marketFeed interface {
+	Start()
+	Stop()
+	SetFiat(i18n.FiatCurrency)
+}
+
+type feedFactory func(callbacks marketfeed.Callbacks) marketFeed
+
 func BuildMainWindow(a fyne.App, data []model.Coin) fyne.Window {
+	return buildMainWindowWithFeedFactory(a, data, func(callbacks marketfeed.Callbacks) marketFeed {
+		return marketfeed.NewDefault(callbacks)
+	})
+}
+
+func buildMainWindowWithFeedFactory(a fyne.App, data []model.Coin, makeFeed feedFactory) fyne.Window {
+	if makeFeed == nil {
+		makeFeed = func(callbacks marketfeed.Callbacks) marketFeed {
+			return marketfeed.NewDefault(callbacks)
+		}
+	}
+
 	a.Settings().SetTheme(uitheme.NewForMode(uitheme.ModeSystem))
 
 	translator := i18n.NewTranslator(i18n.LangEN)
@@ -36,7 +56,7 @@ func BuildMainWindow(a fyne.App, data []model.Coin) fyne.Window {
 	currentLanguage := i18n.LangEN
 	var header *components.Toolbar
 	var statusEventID int64
-	feed := marketfeed.NewDefault(marketfeed.Callbacks{
+	feed := makeFeed(marketfeed.Callbacks{
 		OnMarketUpdate: func(coins []model.Coin) {
 			fyne.Do(func() {
 				coinList.ReplaceData(coins)
@@ -99,10 +119,13 @@ func BuildMainWindow(a fyne.App, data []model.Coin) fyne.Window {
 
 	var stopOnce sync.Once
 
-	w.SetCloseIntercept(func() {
+	w.SetOnClosed(func() {
 		stopOnce.Do(func() {
 			feed.Stop()
 		})
+	})
+
+	w.SetCloseIntercept(func() {
 		w.Close()
 	})
 

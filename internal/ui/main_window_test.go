@@ -4,6 +4,7 @@ import (
 	"testing"
 
 	"cryptoview/internal/model"
+	"cryptoview/internal/service/marketfeed"
 	"cryptoview/internal/ui/i18n"
 	"fyne.io/fyne/v2/test"
 )
@@ -50,7 +51,9 @@ func TestBuildMainWindow_Smoke(t *testing.T) {
 	defer a.Quit()
 
 	data := model.GetMockCoins()
-	w := BuildMainWindow(a, data)
+	w := buildMainWindowWithFeedFactory(a, data, func(callbacks marketfeed.Callbacks) marketFeed {
+		return newFakeFeed(callbacks)
+	})
 
 	if w == nil {
 		t.Fatal("expected non-nil window")
