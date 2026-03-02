@@ -195,6 +195,39 @@ func TestFeedUsesCachedDataWarningWhenAllProvidersFail(t *testing.T) {
 	}
 }
 
+func TestFeedStopCancelsInFlightRequests(t *testing.T) {
+	p1 := &fakeMarketProvider{
+		name: "cg",
+		fetchFunc: func(ctx context.Context) (MarketSnapshot, error) {
+			<-ctx.Done()
+			return MarketSnapshot{}, ctx.Err()
+		},
+	}
+	fx := &fakeFXProvider{
+		fetchFunc: func(ctx context.Context) (FXSnapshot, error) {
+			<-ctx.Done()
+			return FXSnapshot{}, ctx.Err()
+		},
+	}
+	feed := New([]MarketProvider{p1}, fx, Callbacks{})
+	feed.setIntervalsForTest(5*time.Second, 5*time.Second)
+
+	feed.Start()
+
+	done := make(chan struct{})
+	go func() {
+		feed.Stop()
+		close(done)
+	}()
+
+	select {
+	case <-done:
+		// expected: stop should cancel ongoing requests promptly
+	case <-time.After(500 * time.Millisecond):
+		t.Fatal("expected Stop to finish quickly by canceling in-flight requests")
+	}
+}
+
 func snapshotWithBTC(provider string, price float64) MarketSnapshot {
 	change := 1.25
 	return MarketSnapshot{

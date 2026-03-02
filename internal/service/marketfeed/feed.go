@@ -101,6 +101,8 @@ type Feed struct {
 
 	marketPollInterval time.Duration
 	fxPollInterval     time.Duration
+	runCtx             context.Context
+	runCancel          context.CancelFunc
 
 	stopCh   chan struct{}
 	wg       sync.WaitGroup
@@ -128,6 +130,8 @@ func New(providers []MarketProvider, fxProvider FXProvider, callbacks Callbacks)
 		panic("marketfeed: fx provider is required")
 	}
 
+	runCtx, runCancel := context.WithCancel(context.Background())
+
 	f := &Feed{
 		providers:          providers,
 		fxProvider:         fxProvider,
@@ -136,6 +140,8 @@ func New(providers []MarketProvider, fxProvider FXProvider, callbacks Callbacks)
 		state:              make(map[string]*providerState, len(providers)),
 		marketPollInterval: defaultMarketPollInterval,
 		fxPollInterval:     defaultFXPollInterval,
+		runCtx:             runCtx,
+		runCancel:          runCancel,
 		stopCh:             make(chan struct{}),
 	}
 	for _, p := range providers {
@@ -171,6 +177,9 @@ func (f *Feed) Start() {
 
 func (f *Feed) Stop() {
 	f.stopOnce.Do(func() {
+		if f.runCancel != nil {
+			f.runCancel()
+		}
 		close(f.stopCh)
 	})
 	f.wg.Wait()
@@ -211,7 +220,10 @@ func (f *Feed) runLoop() {
 }
 
 func (f *Feed) runFXCycle() {
-	ctx, cancel := context.WithTimeout(context.Background(), 12*time.Second)
+	if f.isStopping() {
+		return
+	}
+	ctx, cancel := context.WithTimeout(f.runCtx, 12*time.Second)
 	defer cancel()
 
 	snapshot, err := f.fxProvider.FetchRates(ctx)
@@ -232,11 +244,17 @@ func (f *Feed) runFXCycle() {
 }
 
 func (f *Feed) runMarketCycle() {
+	if f.isStopping() {
+		return
+	}
 	now := time.Now()
 	failures := make([]attemptFailure, 0, len(f.providers))
 	attemptedProviders := 0
 
 	for idx, provider := range f.providers {
+		if f.isStopping() {
+			return
+		}
 		if !f.providerAvailable(provider.Name(), now) {
 			remaining := f.providerCooldownRemaining(provider.Name(), now)
 			log.Printf("marketfeed: skip provider=%s reason=cooldown remaining=%s", provider.Name(), remaining.Round(time.Second))
@@ -326,7 +344,7 @@ func (f *Feed) providerCooldownRemaining(name string, now time.Time) time.Durati
 }
 
 func (f *Feed) fetchProvider(now time.Time, provider MarketProvider) (MarketSnapshot, error) {
-	ctx, cancel := context.WithTimeout(context.Background(), 12*time.Second)
+	ctx, cancel := context.WithTimeout(f.runCtx, 12*time.Second)
 	defer cancel()
 
 	snapshot, err := provider.FetchUSD(ctx)
@@ -494,6 +512,15 @@ func minInt(a, b int) int {
 		return a
 	}
 	return b
+}
+
+func (f *Feed) isStopping() bool {
+	select {
+	case <-f.stopCh:
+		return true
+	default:
+		return false
+	}
 }
 
 func (f *Feed) setIntervalsForTest(market, fx time.Duration) {

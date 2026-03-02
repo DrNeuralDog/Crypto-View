@@ -82,8 +82,10 @@ func buildMainWindowWithFeedFactory(a fyne.App, data []model.Coin, makeFeed feed
 					default:
 						footer.SetWarning(translator.T("status.warning.cached"))
 					}
+				case marketfeed.StatusKindError:
+					footer.SetError(errorStatusMessage(translator, event))
 				default:
-					footer.SetError(translator.T("status.error.network"))
+					footer.SetError(errorStatusMessage(translator, event))
 				}
 			})
 		},
@@ -166,4 +168,14 @@ func providerDisplayName(provider string) string {
 		}
 		return provider
 	}
+}
+
+func errorStatusMessage(translator *i18n.Translator, event marketfeed.StatusEvent) string {
+	if translator == nil {
+		return "Network error"
+	}
+	if event.Code == marketfeed.StatusCodeNoData {
+		return translator.T("status.error.no_data")
+	}
+	return translator.T("status.error.network")
 }

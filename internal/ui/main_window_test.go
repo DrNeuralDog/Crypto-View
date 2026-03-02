@@ -46,6 +46,26 @@ func TestOkStatusMessage(t *testing.T) {
 	}
 }
 
+func TestErrorStatusMessage(t *testing.T) {
+	tr := i18n.NewTranslator(i18n.LangEN)
+
+	noData := errorStatusMessage(tr, marketfeed.StatusEvent{Code: marketfeed.StatusCodeNoData})
+	if noData != "No market data available" {
+		t.Fatalf("expected EN no-data message, got %q", noData)
+	}
+
+	network := errorStatusMessage(tr, marketfeed.StatusEvent{})
+	if network != "Network error" {
+		t.Fatalf("expected EN network error message, got %q", network)
+	}
+
+	tr.SetLanguage(i18n.LangRU)
+	noDataRU := errorStatusMessage(tr, marketfeed.StatusEvent{Code: marketfeed.StatusCodeNoData})
+	if noDataRU != "Нет данных рынка" {
+		t.Fatalf("expected RU no-data message, got %q", noDataRU)
+	}
+}
+
 func TestBuildMainWindow_Smoke(t *testing.T) {
 	a := test.NewApp()
 	defer a.Quit()

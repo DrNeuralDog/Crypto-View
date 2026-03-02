@@ -55,3 +55,4 @@
 [2026-02-26 22:10:34] User reported overflow in second README GIF (right-column context line and left-column time estimate) - GIF regenerated with wrapped text and hours-only label.
 [2026-02-26 22:13:06] User reported another GitHub Mermaid parse error in README architecture diagram (OnStatus label) - Fixed edge label syntax.
 [2026-02-26 22:15:54] User reported repeated Mermaid parse error; verified README still contained old OnStatus label and re-applied fix successfully.
+[2026-03-02 23:46:35] User reported app freeze on close in offline mode with repeated provider timeout logs - Implemented stop-cancel fix in marketfeed and validated full test suite success.

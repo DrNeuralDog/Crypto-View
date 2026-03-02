@@ -21,3 +21,15 @@ func TestTranslatorFallbackForUnknownKey(t *testing.T) {
 		t.Fatalf("expected fallback to key %q, got %q", key, got)
 	}
 }
+
+func TestTranslatorNoDataStatus(t *testing.T) {
+	tr := NewTranslator(LangEN)
+	if got := tr.T("status.error.no_data"); got != "No market data available" {
+		t.Fatalf("expected EN no-data text, got %q", got)
+	}
+
+	tr.SetLanguage(LangRU)
+	if got := tr.T("status.error.no_data"); got != "Нет данных рынка" {
+		t.Fatalf("expected RU no-data text, got %q", got)
+	}
+}
