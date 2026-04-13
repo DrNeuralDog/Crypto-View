@@ -2,9 +2,10 @@ package ui
 
 import (
 	"testing"
+	"time"
 
+	"cryptoview/internal/marketfeed"
 	"cryptoview/internal/model"
-	"cryptoview/internal/service/marketfeed"
 	"cryptoview/internal/ui/i18n"
 	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/canvas"
@@ -19,10 +20,6 @@ type fakeFeed struct {
 	lastFiat  i18n.FiatCurrency
 }
 
-func newFakeFeed(callbacks marketfeed.Callbacks) *fakeFeed {
-	return &fakeFeed{callbacks: callbacks}
-}
-
 func (f *fakeFeed) Start() {
 	f.started = true
 }
@@ -33,6 +30,10 @@ func (f *fakeFeed) Stop() {
 
 func (f *fakeFeed) SetFiat(currency i18n.FiatCurrency) {
 	f.lastFiat = currency
+}
+
+func (f *fakeFeed) SetCallbacks(callbacks marketfeed.Callbacks) {
+	f.callbacks = callbacks
 }
 
 func (f *fakeFeed) EmitStatus(event marketfeed.StatusEvent) {
@@ -51,11 +52,8 @@ func TestBuildMainWindow_IntegrationLifecycle_NoNetwork(t *testing.T) {
 	a := test.NewApp()
 	defer a.Quit()
 
-	var feed *fakeFeed
-	w := buildMainWindowWithFeedFactory(a, nil, func(callbacks marketfeed.Callbacks) marketFeed {
-		feed = newFakeFeed(callbacks)
-		return feed
-	})
+	feed := &fakeFeed{}
+	w := BuildMainWindow(a, nil, feed)
 
 	if w == nil {
 		t.Fatal("expected non-nil window")
@@ -63,12 +61,10 @@ func TestBuildMainWindow_IntegrationLifecycle_NoNetwork(t *testing.T) {
 	if w.Content() == nil {
 		t.Fatal("expected non-nil window content")
 	}
-	if feed == nil {
-		t.Fatal("expected injected fake feed to be created")
-	}
 	if !feed.started {
 		t.Fatal("expected feed.Start to be called during window setup")
 	}
+
 	list := findFirstList(w.Content())
 	if list == nil {
 		t.Fatal("expected coin list widget to be present")
@@ -87,13 +83,12 @@ func TestBuildMainWindow_IntegrationLifecycle_NoNetwork(t *testing.T) {
 	})
 	feed.EmitMarketUpdate([]model.Coin{
 		{
-			ID:             "bitcoin",
-			Name:           "Bitcoin",
-			Ticker:         "BTC",
-			Price:          100000,
-			Change24h:      2.5,
-			LastUpdateTime: "10:11:12",
-			IconPath:       model.IconPathForID("bitcoin"),
+			ID:          "bitcoin",
+			Name:        "Bitcoin",
+			Ticker:      "BTC",
+			Price:       100000,
+			Change24h:   2.5,
+			LastUpdated: time.Date(2026, time.February, 20, 10, 11, 12, 0, time.UTC),
 		},
 	})
 	fyne.DoAndWait(func() {})
@@ -122,11 +117,10 @@ func TestBuildMainWindow_IntegrationLifecycle_NoNetwork(t *testing.T) {
 		Code: marketfeed.StatusCodeNoData,
 	})
 	fyne.DoAndWait(func() {})
-	if !containsCanvasText(w.Content(), "Нет данных рынка") {
+	if !containsCanvasText(w.Content(), i18n.NewTranslator(i18n.LangRU).T("status.error.no_data")) {
 		t.Fatal("expected RU no-data status message in footer")
 	}
 
-	// Window should remain healthy after callback-driven UI updates.
 	if w.Content() == nil {
 		t.Fatal("expected content to remain valid after feed callbacks")
 	}
@@ -190,4 +184,3 @@ func containsCanvasText(obj fyne.CanvasObject, expected string) bool {
 	}
 	return false
 }
-

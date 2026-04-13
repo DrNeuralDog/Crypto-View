@@ -1,81 +1,50 @@
-# UI/UX Documentation - CryptoView
+﻿# CryptoView UI / UX Notes
 
-## Overview
+## Product Shape
 
-CryptoView — desktop-приложение для мониторинга курсов криптовалют. Минималистичный интерфейс с фокусом на читаемость и отзывчивость.
+CryptoView is a compact desktop utility for glanceable crypto price checks.
+The UX goal is speed and clarity, not dense analytics.
 
-## Layout
+## Main Window
 
-### Structure
+- Fixed-size desktop window
+- Header with logo, fiat selector, language selector, and theme toggle
+- Scrollable center list with one row per tracked coin
+- Footer with loading / ok / warning / error status
 
-Используется `fyne.Container` с `layout.Border`:
+## Coin Row
 
-```
-┌─────────────────────────────────────────────────────────┐
-│  [Logo]              [Spacer]    [USD▼] [Lang] [Theme]  │  ← Header (Top)
-├─────────────────────────────────────────────────────────┤
-│                                                         │
-│  ┌─────────────────────────────────────────────────┐  │
-│  │  [Icon] Bitcoin | BTC     $XX,XXX   +2.5%  12:34  │  │
-│  │  [Icon] Ethereum | ETH   $X,XXX    -1.2%  12:34  │  │  ← Body (Center)
-│  │  ...                                              │  │     widget.List
-│  └─────────────────────────────────────────────────┘  │
-│                                                         │
-├─────────────────────────────────────────────────────────┤
-│  [Status: OK / Loading / Network Error]                  │  ← Footer (Bottom)
-└─────────────────────────────────────────────────────────┘
-```
+Each row presents:
 
-### Header (Top)
-- **Left:** App logo (small)
-- **Center:** Spacer
-- **Right:** Fiat Select (USD/EUR/RUB), Language toggle (RU/EN), Theme toggle (Sun/Moon icon)
+- embedded coin icon
+- coin name and ticker
+- current price in the selected fiat
+- 24h percentage change with color coding
+- last update time formatted for the active locale
 
-### Body (Center)
-- **widget.List** — обязательно List, не VBox (view recycling, memory efficiency)
-- Каждая строка: иконка | название | тикер | цена | 24h % | время обновления
+## Interaction Rules
 
-### Footer (Bottom)
-- Статус: OK / Loading / Network Error
+- Fiat switching is local and immediate when cached FX data is available
+- Language switching updates header, footer, and formatted text without rebuilding the application
+- Theme switching toggles between light and dark palettes
+- Closing the window must stop the feed cleanly
 
-## Currency Card
+## Status UX
 
-Каждая строка списка содержит:
-- **Icon/Logo** — локальный файл (resources/coins/btc.png и т.д.)
-- **Name | Ticker** — например "Bitcoin | BTC"
-- **Current Price** — в выбранной фиатной валюте
-- **24h Change** — в процентах, цвет: зелёный (рост), красный (падение)
-- **Last Update** — формат HH:MM:SS
+- `Loading`: visible progress indicator
+- `OK`: healthy provider status
+- `Warning`: fallback provider active, rate-limited cache usage, or offline cached mode
+- `Error`: no market data available
 
-## Controls
+## Visual Constraints
 
-| Control | Type | Action |
-|---------|------|--------|
-| Fiat Currency | Dropdown/Select | Мгновенное обновление данных |
-| Language | Button/Toggle | RU / EN (default: EN) |
-| Theme | Icon Button | Light / Dark |
-| Refresh | Button | Ручное обновление данных |
+- Prioritize readability over density
+- Keep the window compact
+- Preserve high contrast for price-change colors
+- Use embedded assets so the UI does not depend on relative filesystem paths at runtime
 
-## States
+## Accessibility / Maintainability
 
-| State | UI Element |
-|-------|------------|
-| **Loading** | `widget.ProgressBarInfinite` |
-| **Error** | Красный текст статуса внизу списка |
-| **Normal** | Список с данными |
-
-## Responsive Behavior
-
-Desktop-only. Окно фиксированного или минимального размера. List скроллится при большом количестве элементов.
-
-## Accessibility
-
-- Контрастные цвета для 24h change (зелёный/красный)
-- Читаемые шрифты (Fyne default)
-- Кнопки с иконками + tooltip при необходимости
-
-## Theme
-
-- **Light:** Светлый фон, тёмный текст
-- **Dark:** Тёмный фон, светлый текст
-- Переключение через Fyne theme API
+- Text should remain legible in both themes
+- Controls use stable internal values (`EN`, `RU`, `USD`, `EUR`, `RUB`)
+- UI formatting lives in the i18n layer, not in domain or provider code

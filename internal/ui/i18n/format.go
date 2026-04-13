@@ -20,11 +20,11 @@ func FormatPrice(value float64, fiat FiatCurrency, lang AppLanguage) string {
 	}
 }
 
-func FormatTime(hhmmss string, _ AppLanguage) string {
-	if _, err := time.Parse("15:04:05", hhmmss); err != nil {
+func FormatTime(value time.Time, _ AppLanguage) string {
+	if value.IsZero() {
 		return "--:--:--"
 	}
-	return hhmmss
+	return value.Local().Format("15:04:05")
 }
 
 func currencySymbol(fiat FiatCurrency) string {

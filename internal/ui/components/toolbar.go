@@ -34,7 +34,7 @@ func NewToolbar(
 
 	title := widget.NewLabel(translator.T("app.title"))
 	title.TextStyle = fyne.TextStyle{Bold: true}
-	logoResource := assets.LoadResource("resources/Logo/CryptoView Icon.png")
+	logoResource := assets.LoadAppIcon()
 	if logoResource == nil {
 		logoResource = theme.FyneLogo()
 	}
@@ -55,7 +55,7 @@ func NewToolbar(
 		})
 	currencySelect.SetSelected(string(i18n.FiatUSD))
 
-	langSelect := widget.NewSelect([]string{translator.T("toolbar.lang.en"), translator.T("toolbar.lang.ru")}, func(selected string) {
+	langSelect := widget.NewSelect([]string{string(i18n.LangEN), string(i18n.LangRU)}, func(selected string) {
 		if onLanguageChanged != nil {
 			language, ok := i18n.ParseAppLanguage(selected)
 			if !ok {
@@ -117,6 +117,5 @@ func (t *Toolbar) LanguageSelect() *widget.Select {
 func (t *Toolbar) SetLanguage(language i18n.AppLanguage) {
 	t.translator.SetLanguage(language)
 	t.title.SetText(t.translator.T("app.title"))
-	t.langSelect.Options = []string{t.translator.T("toolbar.lang.en"), t.translator.T("toolbar.lang.ru")}
 	t.langSelect.Refresh()
 }

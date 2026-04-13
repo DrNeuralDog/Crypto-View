@@ -5,8 +5,8 @@ import (
 	"sync"
 	"sync/atomic"
 
+	"cryptoview/internal/marketfeed"
 	"cryptoview/internal/model"
-	"cryptoview/internal/service/marketfeed"
 	"cryptoview/internal/ui/assets"
 	"cryptoview/internal/ui/components"
 	"cryptoview/internal/ui/i18n"
@@ -20,21 +20,19 @@ type marketFeed interface {
 	Start()
 	Stop()
 	SetFiat(i18n.FiatCurrency)
+	SetCallbacks(marketfeed.Callbacks)
 }
 
-type feedFactory func(callbacks marketfeed.Callbacks) marketFeed
+type noopFeed struct{}
 
-func BuildMainWindow(a fyne.App, data []model.Coin) fyne.Window {
-	return buildMainWindowWithFeedFactory(a, data, func(callbacks marketfeed.Callbacks) marketFeed {
-		return marketfeed.NewDefault(callbacks)
-	})
-}
+func (noopFeed) Start()                            {}
+func (noopFeed) Stop()                             {}
+func (noopFeed) SetFiat(i18n.FiatCurrency)         {}
+func (noopFeed) SetCallbacks(marketfeed.Callbacks) {}
 
-func buildMainWindowWithFeedFactory(a fyne.App, data []model.Coin, makeFeed feedFactory) fyne.Window {
-	if makeFeed == nil {
-		makeFeed = func(callbacks marketfeed.Callbacks) marketFeed {
-			return marketfeed.NewDefault(callbacks)
-		}
+func BuildMainWindow(a fyne.App, data []model.Coin, feed marketFeed) fyne.Window {
+	if feed == nil {
+		feed = noopFeed{}
 	}
 
 	a.Settings().SetTheme(uitheme.NewForMode(uitheme.ModeSystem))
@@ -43,7 +41,8 @@ func buildMainWindowWithFeedFactory(a fyne.App, data []model.Coin, makeFeed feed
 	w := a.NewWindow(translator.T("app.title"))
 	w.Resize(fyne.NewSize(450, 480))
 	w.SetFixedSize(true)
-	appIcon := assets.LoadResource("resources/Logo/CryptoView Icon.png")
+
+	appIcon := assets.LoadAppIcon()
 	if appIcon == nil {
 		appIcon = theme.FyneLogo()
 	}
@@ -56,7 +55,8 @@ func buildMainWindowWithFeedFactory(a fyne.App, data []model.Coin, makeFeed feed
 	currentLanguage := i18n.LangEN
 	var header *components.Toolbar
 	var statusEventID int64
-	feed := makeFeed(marketfeed.Callbacks{
+
+	feed.SetCallbacks(marketfeed.Callbacks{
 		OnMarketUpdate: func(coins []model.Coin) {
 			fyne.Do(func() {
 				coinList.ReplaceData(coins)
@@ -68,6 +68,7 @@ func buildMainWindowWithFeedFactory(a fyne.App, data []model.Coin, makeFeed feed
 				if atomic.LoadInt64(&statusEventID) != localID {
 					return
 				}
+
 				switch event.Kind {
 				case marketfeed.StatusKindLoading:
 					footer.SetLoading()
@@ -120,13 +121,11 @@ func buildMainWindowWithFeedFactory(a fyne.App, data []model.Coin, makeFeed feed
 	feed.Start()
 
 	var stopOnce sync.Once
-
 	w.SetOnClosed(func() {
 		stopOnce.Do(func() {
 			feed.Stop()
 		})
 	})
-
 	w.SetCloseIntercept(func() {
 		w.Close()
 	})
@@ -139,11 +138,12 @@ func okStatusMessage(translator *i18n.Translator, provider string) string {
 	if translator != nil {
 		base = translator.T("status.ok")
 	}
+
 	name := providerDisplayName(provider)
 	if name == "" {
 		return base
 	}
-	return base + " • " + name
+	return base + " \u2022 " + name
 }
 
 func providerDisplayName(provider string) string {

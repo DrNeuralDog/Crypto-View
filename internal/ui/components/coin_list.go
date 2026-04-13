@@ -18,14 +18,13 @@ import (
 )
 
 type CoinListController struct {
-	list       *widget.List
-	data       []model.Coin
-	currency   i18n.FiatCurrency
-	language   i18n.AppLanguage
-	translator *i18n.Translator
-	mu         sync.RWMutex
-	icons      map[string]fyne.Resource
-	tickerW    float32
+	list     *widget.List
+	data     []model.Coin
+	currency i18n.FiatCurrency
+	language i18n.AppLanguage
+	mu       sync.RWMutex
+	icons    map[string]fyne.Resource
+	tickerW  float32
 }
 
 func NewCoinList(data []model.Coin, translator *i18n.Translator) *CoinListController {
@@ -33,12 +32,11 @@ func NewCoinList(data []model.Coin, translator *i18n.Translator) *CoinListContro
 		translator = i18n.NewTranslator(i18n.LangEN)
 	}
 	controller := &CoinListController{
-		data:       data,
-		currency:   i18n.FiatUSD,
-		language:   translator.Language(),
-		translator: translator,
-		icons:      make(map[string]fyne.Resource),
-		tickerW:    maxTickerWidth(data),
+		data:     data,
+		currency: i18n.FiatUSD,
+		language: translator.Language(),
+		icons:    make(map[string]fyne.Resource),
+		tickerW:  maxTickerWidth(data),
 	}
 
 	controller.list = widget.NewList(
@@ -67,7 +65,7 @@ func NewCoinList(data []model.Coin, translator *i18n.Translator) *CoinListContro
 			row.applyCoin(
 				coin,
 				i18n.FormatPrice(coin.Price, currency, language),
-				i18n.FormatTime(coin.LastUpdateTime, language),
+				i18n.FormatTime(coin.LastUpdated, language),
 				changeColor(coin.Change24h),
 				controller.iconForCoin(coin),
 				tickerW,
@@ -114,24 +112,20 @@ func (c *CoinListController) ReplaceData(coins []model.Coin) {
 }
 
 func (c *CoinListController) iconForCoin(coin model.Coin) fyne.Resource {
-	if coin.IconPath == "" {
-		return nil
-	}
-
 	c.mu.RLock()
-	cached, ok := c.icons[coin.IconPath]
+	cached, ok := c.icons[coin.ID]
 	c.mu.RUnlock()
 	if ok {
 		return cached
 	}
 
-	resource := assets.LoadResource(coin.IconPath)
+	resource := assets.LoadCoinIcon(coin.ID)
 	if resource == nil {
 		return nil
 	}
 
 	c.mu.Lock()
-	c.icons[coin.IconPath] = resource
+	c.icons[coin.ID] = resource
 	c.mu.Unlock()
 	return resource
 }

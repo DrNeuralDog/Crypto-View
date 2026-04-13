@@ -1,0 +1,66 @@
+---
+alwaysApply: true
+---
+
+# Development Agent Workflow - Cursor Rules
+
+## Primary Directive
+You are a highly skilled C++ and Golang agent with over 30 years of development experience, implementing a project or some changes in the project. Follow established documentation and maintain consistency.
+
+## SECOND BRAIN (SINGLE SOURCE OF TRUTH)
+**All project knowledge – architecture decisions, error patterns, dependency choices, discussions, and context – lives in the NotebookLM notebook. This project folder does NOT store complete knowledge. The notebook is the single source of truth.**
+- ALWAYS check `docs/AI_Development/ProjectManifest.md` to get the current **Notebook ID**.
+- **Debugging & Research Rule:** Whenever you face a bug or need architectural context, you MUST first query the NotebookLM using `nlm query` with the project's Notebook ID. Only if NotebookLM does not have the answer, you are allowed to perform a standard web search.
+
+## Core Workflow Process
+
+### Before Starting Any Task
+- Consult `docs/AI_Development/CryptoView_Implementation.md` for current stage and available tasks.
+- When writing code, be sure to use the style from `.cursor/rules/styles.mdc`!
+
+### Task Execution Protocol
+*(... шаги 1-5 остаются без изменений, только пути меняем на `docs/AI_Development/...` ...)*
+
+#### 6. Error Handling
+- Check `docs/AI_Development/WorkflowLogs/BugLog.md` for similar issues.
+- Query the NotebookLM debugging notebook via `nlm` CLI before attempting a fix.
+- Document all errors and solutions in BugLog.md.
+
+#### 7. Completing a task
+- Write a new line with the completed task in `docs/AI_Development/WorkflowLogs/DevelopmentLog.md` and mark successful execution in `docs/AI_Development/CryptoView_Implementation.md`.
+
+#### 8. NotebookLM Log Synchronization
+- To keep the "Second Brain" updated without slowing down every minor request, log files MUST be synchronized with NotebookLM ONLY in two cases:
+  1. When a subtask from `docs/AI_Development/ProjectTitleByCurrentCR_Implementation.md` is fully completed and marked as done.
+  2. When the user explicitly runs the `/sync_logs` command.
+- **Synchronization Process**: The agent must use the `nlm cli` to find and delete the old sources of `DevelopmentLog.md`, `BugLog.md`, `GitLog.md`, and `UserInteractionLog.md` from the project's NotebookLM notebook, and then immediately upload the current, updated versions of these files as new sources.
+
+
+### File Reference Priority
+1. `docs/AI_Development/ProjectManifest.md` - To get Notebook IDs and absolute single source of truth.
+2. `docs/AI_Development/WorkflowLogs/BugLog.md` - Check for known issues first.
+3. `docs/AI_Development/WorkflowLogs/DevelopmentLog.md` - Determine the actions performed.
+4. `docs/AI_Development/CryptoView_Implementation.md` - Main task reference.
+5. `docs/AI_Development/project_structure.md` - Structure guidance.
+6. `docs/AI_Development/UI_UX_doc.md` - Design requirements.
+
+## Critical Rules
+- **ALWAYS** If any of the md files is missing in `docs/AI_Development/`, the agent must create it automatically.
+- **ALWAYS** Record the result of your task in `docs/AI_Development/WorkflowLogs/DevelopmentLog.md`.
+- **ALWAYS** Record bugs in `docs/AI_Development/WorkflowLogs/BugLog.md` in the format: `[<Timestamp>] <Brief description of error/debug> - <Result>`.
+- **NEVER** skip documentation consultation
+- **NEVER** mark tasks complete in `docs/AI_Development/CryptoView_Implementation.md` without proper testing
+- **NEVER** ignore project structure guidelines
+- **NEVER** implement UI without checking UI_UX_doc.md
+- **NEVER** fix errors without checking BugLog.md first
+- **ALWAYS** document errors and solutions
+- **ALWAYS** If any of the md files is missing, the agent must create it automatically with a name and format corresponding to the description in this document.
+- **ALWAYS** follow the established workflow process
+- **ALWAYS** To synchronize your actions with other developers and agents, it is critically important to check the current development progress in the `docs/AI_Development/WorkflowLogs/DevelopmentLog.md` file and synchronize your actions with it
+- **ALWAYS** Record the result of your task in the file `docs/AI_Development/WorkflowLogs/DevelopmentLog.md` in the format: `[<Timestamp>] <Brief description of request/action> - <Result>`. If the file does not exist, create it!
+- **ALWAYS** If during development you run the project and find some bug - record it in `docs/AI_Development/WorkflowLogs/BugLog.md` and try to fix it - for the ErrorsLog file it does not matter whether you fixed the error successfully or not - the main thing is to indicate it there! Then if the error is fixed successfully - write it in `docs/AI_Development/WorkflowLogs/BugLog.md` - just another same post in the same format.
+- **ALWAYS** The format of the entry in BugLog.md: `[<Timestamp>] <Brief description of error/debug> - <Result>`
+
+
+
+Remember: Build a cohesive, well-documented, and maintainable project. Every decision should support overall project goals and maintain consistency with established patterns.# Development Agent Workflow - Cursor Rules

@@ -4,6 +4,7 @@ import (
 	"image/color"
 	"strings"
 	"testing"
+	"time"
 
 	"cryptoview/internal/model"
 	"cryptoview/internal/ui/i18n"
@@ -14,7 +15,7 @@ func TestNewCoinList(t *testing.T) {
 	a := test.NewApp()
 	defer a.Quit()
 
-	data := model.GetMockCoins()
+	data := mockCoins()
 	list := NewCoinList(data, i18n.NewTranslator(i18n.LangEN))
 	if list == nil {
 		t.Fatal("expected list to be non-nil")
@@ -36,7 +37,7 @@ func TestCoinListCurrencySwitch(t *testing.T) {
 	a := test.NewApp()
 	defer a.Quit()
 
-	controller := NewCoinList(model.GetMockCoins(), i18n.NewTranslator(i18n.LangEN))
+	controller := NewCoinList(mockCoins(), i18n.NewTranslator(i18n.LangEN))
 	item := controller.Widget().CreateItem()
 	row := item.(*coinListItem)
 
@@ -69,7 +70,7 @@ func TestCoinListChangeColor(t *testing.T) {
 	a := test.NewApp()
 	defer a.Quit()
 
-	controller := NewCoinList(model.GetMockCoins(), i18n.NewTranslator(i18n.LangEN))
+	controller := NewCoinList(mockCoins(), i18n.NewTranslator(i18n.LangEN))
 	item := controller.Widget().CreateItem()
 	row := item.(*coinListItem)
 
@@ -88,7 +89,7 @@ func TestCoinListLastItemSeparatorHidden(t *testing.T) {
 	a := test.NewApp()
 	defer a.Quit()
 
-	controller := NewCoinList(model.GetMockCoins(), i18n.NewTranslator(i18n.LangEN))
+	controller := NewCoinList(mockCoins(), i18n.NewTranslator(i18n.LangEN))
 	item := controller.Widget().CreateItem()
 	row := item.(*coinListItem)
 
@@ -103,9 +104,9 @@ func TestReplaceData(t *testing.T) {
 	a := test.NewApp()
 	defer a.Quit()
 
-	controller := NewCoinList(model.GetMockCoins(), i18n.NewTranslator(i18n.LangEN))
+	controller := NewCoinList(mockCoins(), i18n.NewTranslator(i18n.LangEN))
 	newData := []model.Coin{
-		{ID: "bitcoin", Name: "Bitcoin", Ticker: "BTC", Price: 1, Change24h: 0.1, LastUpdateTime: "10:11:12"},
+		{ID: "bitcoin", Name: "Bitcoin", Ticker: "BTC", Price: 1, Change24h: 0.1, LastUpdated: time.Date(2026, time.February, 20, 10, 11, 12, 0, time.UTC)},
 	}
 
 	controller.ReplaceData(newData)

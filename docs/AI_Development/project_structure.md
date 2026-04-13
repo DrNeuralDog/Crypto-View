@@ -1,98 +1,97 @@
-# Project Structure - CryptoView
+﻿# CryptoView Project Structure
 
-## Root Directory
+## Canonical Layout
 
-```
+```text
 CryptoView/
 ├── cmd/
 │   └── cryptoview/
-│       └── main.go          # Entry point. App init, Window assembly, run.
+│       └── main.go
 ├── internal/
-│   ├── model/               # Pure data structures
-│   │   └── coin.go          # Structs with json tags (Coin, PriceResponse)
-│   ├── api/                 # Network layer
-│   │   ├── client.go        # APIClient interface, http.Client config (timeouts)
-│   │   └── coingecko.go     # CoinGecko API implementation
-│   ├── service/             # Business logic layer
-│   │   └── price_service.go # Caching, currency conversion, auto-refresh
-│   └── ui/                  # Presentation layer (Fyne)
-│       ├── app.go           # Theme and app initialization
-│       ├── main_window.go   # Main window layout assembly
-│       ├── components/      # UI components
-│       │   ├── coin_list.go # List widget logic (data binding)
-│       │   └── toolbar.go   # Currency, theme, language controls
-│       └── theme/           # Custom fonts/colors (if needed)
-├── pkg/                     # (Optional) Shared utilities
-│   └── i18n/
-│       └── loc.go           # Localization (ru/en string map)
-├── resources/               # Static assets
-│   ├── icon.png             # App icon
-│   └── coins/               # Coin logos (btc.png, eth.png, etc.)
-├── docs/                    # Project documentation
-│   ├── PRD.md
-│   ├── AI_Development/      # AI workflow docs
-│   │   ├── Implementation.md
-│   │   ├── project_structure.md
-│   │   ├── UI_UX_doc.md
-│   │   ├── CryptoView_Implementation.md  # Task tracking
-│   │   └── WorkflowLogs/    # Development logs
-│   │       ├── DevelopmentLog.md
-│   │       ├── BugLog.md
-│   │       ├── GitLog.md
-│   │       └── UserInteractionLog.md
-│   ├── Archive/             # Outdated docs archive
-│   └── OtherHelpfulDocs/    # Reference materials
-├── Makefile                 # Build commands (build, run, clean)
+│   ├── catalog/
+│   ├── marketfeed/
+│   ├── model/
+│   ├── providers/
+│   └── ui/
+│       ├── assets/
+│       ├── components/
+│       ├── i18n/
+│       └── theme/
+├── resources/
+│   ├── Logo/
+│   ├── coins/
+│   └── resources.go
+├── docs/
+│   ├── AI_Development/
+│   ├── Archive/
+│   ├── OtherHelpfulDocs/
+│   └── designs/
+├── build.ps1
+├── build_all_os.ps1
+├── Makefile
+├── test.ps1
 ├── go.mod
 └── go.sum
 ```
 
-## Detailed Structure
+## Responsibilities
 
-### cmd/cryptoview/
-Точка входа приложения. Инициализация Fyne App, создание главного окна, запуск event loop.
+### `cmd/cryptoview`
 
-### internal/model/
-Чистые структуры данных для парсинга JSON API. Без бизнес-логики.
+Application startup only. This is where providers, the FX source, the feed, and the UI are composed together.
 
-### internal/api/
-HTTP-клиент и провайдеры внешних API (CoinGecko). Таймауты, retry, error handling.
+### `internal/catalog`
 
-### internal/service/
-Бизнес-логика: кэширование цен, конвертация валют, автообновление по таймеру.
+Single source of truth for:
 
-### internal/ui/
-Весь код Fyne: окна, виджеты, темы. Связь с service через каналы/колбэки.
+- tracked coin order
+- canonical coin IDs
+- display names
+- tickers
+- icon asset keys
+- alias normalization across external providers
 
-### pkg/
-Переиспользуемые утилиты. i18n — простая локализация (map[string]string).
+### `internal/model`
 
-### resources/
-Статические файлы: иконки приложения, логотипы монет. Встраиваются через `go:embed`.
+Domain-level data models only. Models in this package should not carry UI formatting details or filesystem paths.
 
-### docs/
-- **PRD.md** — Product Requirements Document (в корне docs/)
-- **AI_Development/** — Документация для AI-разработки
-  - **Implementation.md** — План реализации
-  - **project_structure.md** — Структура проекта (этот файл)
-  - **UI_UX_doc.md** — Спецификации UI/UX
-  - **CryptoView_Implementation.md** — Трекинг задач (completed/pending)
-  - **WorkflowLogs/** — Логи разработки, багов, Git, взаимодействий
-- **Archive/** — Архив устаревших документов
-- **OtherHelpfulDocs/** — Справочные материалы (не изменять агенту)
+### `internal/providers`
 
-## Configuration
+Concrete external integrations:
 
-- **go.mod** — Go modules, зависимости
-- **Makefile** — `make build`, `make run`, `make clean`
-- **.gitignore** — Исключения для Git
+- market-data providers
+- FX provider
+- HTTP request helpers
+- response sanitation and retry-after parsing
 
-## Build & Deployment
+### `internal/marketfeed`
 
-- `go build ./cmd/cryptoview` — сборка
-- `fyne package` — упаковка для Windows/Linux/macOS
-- Кросс-компиляция: `GOOS=linux GOARCH=amd64 go build ...`
+Application orchestration layer:
 
-## Code Style
+- polling loops
+- cooldown/backoff logic
+- fallback chain execution
+- cached data behavior
+- fiat recalculation
+- status emission to UI callbacks
 
-Проект на **Go**. Используется стандартный `gofmt` и `go vet`. Стиль: [Effective Go](https://go.dev/doc/effective_go).
+### `internal/ui`
+
+Presentation layer built with Fyne:
+
+- main window assembly
+- list/controller widgets
+- footer states
+- i18n formatting
+- custom theme
+- asset adapter over embedded resources
+
+### `resources`
+
+Static project assets plus the embedded resource registry used at runtime.
+The source image files stay here so the PowerShell build scripts can still use them for Windows icon packaging.
+
+## Notes
+
+- `docs/AI_Development/project_structure.md` is the only canonical structure document.
+- Old duplicate structure docs should not be used as sources of truth.

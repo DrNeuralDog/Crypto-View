@@ -3,8 +3,7 @@ package ui
 import (
 	"testing"
 
-	"cryptoview/internal/model"
-	"cryptoview/internal/service/marketfeed"
+	"cryptoview/internal/marketfeed"
 	"cryptoview/internal/ui/i18n"
 	"fyne.io/fyne/v2/test"
 )
@@ -26,8 +25,7 @@ func TestProviderDisplayName(t *testing.T) {
 		{"unknown", "unknown"},
 	}
 	for _, tt := range tests {
-		got := providerDisplayName(tt.provider)
-		if got != tt.want {
+		if got := providerDisplayName(tt.provider); got != tt.want {
 			t.Errorf("providerDisplayName(%q) = %q, want %q", tt.provider, got, tt.want)
 		}
 	}
@@ -35,6 +33,7 @@ func TestProviderDisplayName(t *testing.T) {
 
 func TestOkStatusMessage(t *testing.T) {
 	tr := i18n.NewTranslator(i18n.LangEN)
+
 	if got := okStatusMessage(tr, "coingecko"); got != "OK • CoinGecko" {
 		t.Fatalf("expected OK • CoinGecko, got %q", got)
 	}
@@ -61,7 +60,7 @@ func TestErrorStatusMessage(t *testing.T) {
 
 	tr.SetLanguage(i18n.LangRU)
 	noDataRU := errorStatusMessage(tr, marketfeed.StatusEvent{Code: marketfeed.StatusCodeNoData})
-	if noDataRU != "Нет данных рынка" {
+	if noDataRU != tr.T("status.error.no_data") {
 		t.Fatalf("expected RU no-data message, got %q", noDataRU)
 	}
 }
@@ -70,10 +69,8 @@ func TestBuildMainWindow_Smoke(t *testing.T) {
 	a := test.NewApp()
 	defer a.Quit()
 
-	data := model.GetMockCoins()
-	w := buildMainWindowWithFeedFactory(a, data, func(callbacks marketfeed.Callbacks) marketFeed {
-		return newFakeFeed(callbacks)
-	})
+	feed := &fakeFeed{}
+	w := BuildMainWindow(a, mockCoins(), feed)
 
 	if w == nil {
 		t.Fatal("expected non-nil window")
@@ -84,6 +81,9 @@ func TestBuildMainWindow_Smoke(t *testing.T) {
 	if w.Title() != "CryptoView" {
 		t.Fatalf("expected title CryptoView, got %q", w.Title())
 	}
-	// Trigger close to stop marketfeed goroutines (SetCloseIntercept calls feed.Stop)
+
 	w.Close()
+	if feed.stopCalls != 1 {
+		t.Fatalf("expected feed.Stop to be called once on close, got %d", feed.stopCalls)
+	}
 }

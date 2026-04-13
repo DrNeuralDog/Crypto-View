@@ -1,0 +1,11 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(go build:*)",
+      "Bash(go test:*)",
+      "Bash(grep -E \"^[^/]*$|/\\(cmd|pkg|internal|ui\\)/|main\\\\.go\")",
+      "Bash(xargs ls:*)",
+      "Bash(xargs grep:*)"
+    ]
+  }
+}

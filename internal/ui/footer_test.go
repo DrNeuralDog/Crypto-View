@@ -66,14 +66,15 @@ func TestFooterLanguageSwitch(t *testing.T) {
 	a := test.NewApp()
 	defer a.Quit()
 
+	translator := i18n.NewTranslator(i18n.LangRU)
 	footer := NewFooterController(i18n.NewTranslator(i18n.LangEN))
 	footer.SetLanguage(i18n.LangRU)
 	footer.SetLoading()
 
-	if footer.statusLabel.Text != "Статус:" {
+	if footer.statusLabel.Text != translator.T("status.label") {
 		t.Fatalf("expected localized status label, got %q", footer.statusLabel.Text)
 	}
-	if footer.statusValue.Text != "Загрузка..." {
+	if footer.statusValue.Text != translator.T("status.loading") {
 		t.Fatalf("expected localized loading text, got %q", footer.statusValue.Text)
 	}
 }
@@ -82,10 +83,11 @@ func TestFooterWarningFallbackText(t *testing.T) {
 	a := test.NewApp()
 	defer a.Quit()
 
-	footer := NewFooterController(i18n.NewTranslator(i18n.LangRU))
+	translator := i18n.NewTranslator(i18n.LangRU)
+	footer := NewFooterController(translator)
 	footer.SetWarning("")
 
-	if footer.statusValue.Text != "Оффлайн, используются кешированные данные" {
+	if footer.statusValue.Text != translator.T("status.warning.cached") {
 		t.Fatalf("expected localized default warning text, got %q", footer.statusValue.Text)
 	}
 }

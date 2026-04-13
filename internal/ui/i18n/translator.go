@@ -55,9 +55,6 @@ var translations = map[AppLanguage]map[string]string{
 		"status.warning.cached":   "Offline, using cached data",
 		"status.warning.rate":     "Rate limited (429), using cached data",
 		"status.warning.fallback": "Provider fallback active",
-		"toolbar.refresh.tooltip": "Refresh",
-		"toolbar.lang.en":         "EN",
-		"toolbar.lang.ru":         "RU",
 	},
 	LangRU: {
 		"app.title":               "CryptoView",
@@ -69,8 +66,5 @@ var translations = map[AppLanguage]map[string]string{
 		"status.warning.cached":   "Оффлайн, используются кешированные данные",
 		"status.warning.rate":     "Лимит API (429), используются кешированные данные",
 		"status.warning.fallback": "Активен резервный провайдер",
-		"toolbar.refresh.tooltip": "Обновить",
-		"toolbar.lang.en":         "EN",
-		"toolbar.lang.ru":         "RU",
 	},
 }

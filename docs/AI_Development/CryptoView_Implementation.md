@@ -1,47 +1,29 @@
-# CryptoView - Task Tracking (Implementation)
+﻿# CryptoView Task Tracking
 
-> **Назначение:** Отслеживание выполненных и текущих задач. Не путать с DevelopmentLog (логирование действий).
+## Current Stage
 
-## Текущий этап: Stage 2 — Core Features (MVP)
+Stage 4 - Maintenance, Refactoring, and Quality
 
-## Задачи
+## Completed
 
-### Stage 1: Foundation & Setup
-- [x] Initialize Go module (`go mod init`)
-- [x] Create directory structure (cmd, internal, resources, docs)
-- [x] Add Fyne dependency
-- [x] Create minimal `main.go` with empty window
-- [x] Configure Makefile (build, run, clean)
+- [x] Establish explicit composition root in `cmd/cryptoview`
+- [x] Separate domain catalog, provider layer, feed orchestration, and UI layer
+- [x] Replace panic-style feed construction with error-return construction
+- [x] Centralize tracked coin metadata and alias normalization
+- [x] Remove UI-only fields from the domain coin model
+- [x] Inject feed into UI instead of constructing it inside the window layer
+- [x] Embed runtime icons and branding with `go:embed`
+- [x] Decouple language selector behavior from display-label parsing
+- [x] Replace legacy `internal/api` and `internal/service/marketfeed` layout with the new package topology
+- [x] Update unit/integration tests to the new architecture
+- [x] Standardize local quality checks with `gofmt`, `go vet`, and `go test`
+- [x] Sync README and AI-development docs with the current codebase
 
-### Stage 2: Core Features (MVP)
-- [x] Define JSON structs for API response (model/coin.go)
-- [x] Implement HTTP client with timeout (api/client.go)
-- [x] Implement CoinGecko provider (api/coingecko.go)
-- [ ] Create `GetPrices(currency string)` — console output first
-- [x] Build basic Fyne window with `layout.Border`
-- [x] Create list with mock data (widget.List)
-- [x] Connect real API data to list
-- [x] Implement fiat currency selector (USD/EUR/RUB)
+## Open
 
-### Stage 3: Advanced Features
-- [x] Implement theme switch (Light/Dark)
-- [x] Add localization (i18n, RU/EN)
-- [x] Add refresh button
-- [x] Implement 60s auto-refresh (goroutine + channel)
-- [x] Add network error handling (banner/toast, no crash)
-- [x] Add coin icons to resources
+- [ ] Add hosted CI if the repository workflow requires remote enforcement
+- [ ] Re-authenticate NotebookLM / reinstall `nlm` CLI if second-brain sync is needed again
 
-### Stage 4: Polish & Optimization
-- [x] Loading state (ProgressBarInfinite)
-- [x] Error state (red status text)
-- [ ] Build binaries for Windows, Linux, macOS
-- [x] Final testing and bug fixes
+## Next Recommended Focus
 
----
-
-**Следующая задача к выполнению:** Create `GetPrices(currency string)` � console output first
-
-
-
-
-
+If product work resumes, the next practical area is feature growth on top of the new architecture rather than more structural cleanup.

@@ -38,13 +38,6 @@ func (c *ThemeController) Toggle() {
 	}
 }
 
-func (c *ThemeController) ActionIconText() string {
-	if c.currentVariant() == theme.VariantDark {
-		return "light"
-	}
-	return "dark"
-}
-
 func (c *ThemeController) ActionIconResource() fyne.Resource {
 	if c.currentVariant() == theme.VariantDark {
 		return moonIconResource

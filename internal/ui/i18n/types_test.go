@@ -4,9 +4,9 @@ import "testing"
 
 func TestParseAppLanguage(t *testing.T) {
 	tests := []struct {
-		raw    string
-		want   AppLanguage
-		ok     bool
+		raw  string
+		want AppLanguage
+		ok   bool
 	}{
 		{"EN", LangEN, true},
 		{"en", LangEN, true},
