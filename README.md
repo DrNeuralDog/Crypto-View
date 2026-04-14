@@ -67,6 +67,30 @@ Add API hiccups or rate limits, and the flow becomes even slower.
 - **Tested Modules:** Tests cover API/client behavior, feed fallback logic, i18n, UI components, footer states, and custom theme behavior.
 - **AI-Workflow Experiment:** Intentionally interesting not only as an app, but also as a documented example of rule-driven AI-assisted development.
 
+
+## Feature Tour 📋
+
+### Main Window (Dark Theme)
+
+<p align="center">
+  <img src="docs/designs/UI%20dark.png" alt="CryptoView dark theme UI" width="470" />
+</p>
+
+Dark UI with:
+
+- top toolbar (`currency`, `language`, `theme toggle`)
+- tracked coin rows (`ticker`, `name`, `price`, `24h change`, `update time`)
+- footer status with provider/source feedback
+
+### Main Window (Light Theme)
+
+<p align="center">
+  <img src="docs/designs/UI%20Light.png" alt="CryptoView light theme UI" width="470" />
+</p>
+
+Same workflow and layout with a brighter palette for day-time readability.
+
+
 ## AI-Assisted Development Context
 
 CryptoView is a **working desktop app**, but it is equally a **study in AI-assisted engineering**.
@@ -90,6 +114,151 @@ For this scope (app + UI polish + tests/docs + README assets):
 - **Manual solo implementation estimate: ~24-40 hours (~3-5 working days)**
 
 > Estimate note: approximate comparison for a competent solo developer building and polishing a similar result manually. Actual time depends on experience with Go/Fyne, API integration speed, and documentation standards.
+
+
+## User Journey Flow
+
+```mermaid
+flowchart TD
+    Start([Launch CryptoView]) --> Main["main.go creates app<br/>and builds main window"]
+    Main --> Bootstrap["Window renders with mock coin data"]
+    Bootstrap --> FeedStart["marketfeed.Feed.Start()"]
+    FeedStart --> Loading["Footer: Loading..."]
+
+    Loading --> FXCycle["FX cycle fetches USD/EUR/RUB rates"]
+    Loading --> MarketCycle["Market cycle tries providers in order"]
+
+    MarketCycle --> ProviderOK{"Provider success?"}
+    ProviderOK -->|Yes| BuildCoins["Build display coins<br/>with selected fiat + cached FX"]
+    BuildCoins --> UiUpdate["OnMarketUpdate → CoinList.ReplaceData"]
+    UiUpdate --> FooterOK["Footer: OK / OK+Provider"]
+
+    ProviderOK -->|No| Fallback{"Try next provider?"}
+    Fallback -->|Yes| MarketCycle
+    Fallback -->|No| CacheCheck{"Cached data available?"}
+
+    CacheCheck -->|Yes| CachedUpdate["Use cached data + refresh list"]
+    CachedUpdate --> WarnStatus["Footer: warning (rate limit or offline)"]
+
+    CacheCheck -->|No| ErrorStatus["Footer: error — no data available"]
+
+    FooterOK --> UserAction{"User action"}
+    WarnStatus --> UserAction
+    ErrorStatus --> UserAction
+
+    UserAction -->|Switch fiat USD/EUR/RUB| FiatChange["Toolbar → Feed.SetFiat()<br/>recalculate displayed prices"]
+    FiatChange --> UiUpdate
+
+    UserAction -->|Switch language EN/RU| LangChange["Translator + Toolbar/List/Footer text refresh"]
+    LangChange --> UserAction
+
+    UserAction -->|Toggle theme| ThemeToggle["ThemeController.Toggle()<br/>Light/Dark mode update"]
+    ThemeToggle --> UserAction
+
+    UserAction -->|Close window| Close["Feed.Stop() → window closes"]
+    Close --> End([Done])
+
+    style Start fill:#667eea,stroke:#333,stroke-width:3px,color:#fff
+    style End fill:#764ba2,stroke:#333,stroke-width:3px,color:#fff
+    style Loading fill:#ffe66d,stroke:#333,stroke-width:2px
+    style FooterOK fill:#51cf66,stroke:#333,stroke-width:2px
+    style WarnStatus fill:#ffa94d,stroke:#333,stroke-width:2px
+    style ErrorStatus fill:#ff6b6b,stroke:#333,stroke-width:2px
+    style UserAction fill:#4ecdc4,stroke:#333,stroke-width:2px
+```
+
+## Architecture / Class Interaction Diagram
+
+```mermaid
+flowchart TD
+    subgraph Entry["Entry Point"]
+        Main["cmd/cryptoview/main.go"]
+    end
+
+    subgraph UI["UI Layer (internal/ui + components)"]
+        Build["ui.BuildMainWindow(a, data, feed)<br/>fyne.App + model.Coin slice + marketFeed"]
+        Toolbar["components.Toolbar"]
+        ThemeCtl["components.ThemeController"]
+        CoinList["components.CoinListController"]
+        Footer["ui.FooterController"]
+        Translator["i18n.Translator"]
+        AppIcon["assets.LoadAppIcon()"]
+        CoinIcon["assets.LoadCoinIcon(id)"]
+        Theme["ui/theme.CustomTheme"]
+    end
+
+    subgraph FeedLayer["Market Feed Layer (internal/marketfeed)"]
+        Feed["marketfeed.Feed<br/>orchestrates market + FX polling<br/>applies cooldowns + fallback"]
+        MarketProviders["MarketProvider chain<br/>CoinGecko → CryptoCompare → CoinLore"]
+        FXProvider["FXProvider<br/>OpenExchangeRatesProvider"]
+        MarketSnap["MarketSnapshot / FXSnapshot<br/>cached data layer"]
+    end
+
+    subgraph ProviderImpl["Provider Implementations (internal/providers)"]
+        CG["CoinGeckoProvider"]
+        CRC["CryptoCompareProvider"]
+        CL["CoinLoreProvider"]
+        OER["OpenExchangeRatesProvider"]
+        HTTPHelper["doJSONRequest(...)<br/>private HTTP JSON helper"]
+    end
+
+    subgraph Model["Model Layer"]
+        Coin["model.Coin<br/>ticker, name, price, change, time"]
+    end
+
+    subgraph Resources["Bundled Resources"]
+        LogoRes["resources/Logo/*"]
+        CoinRes["resources/coins/*"]
+    end
+
+    Main --> Build
+
+    Build --> Toolbar
+    Build --> CoinList
+    Build --> Footer
+    Build --> Translator
+    Build --> Feed
+    Build --> Theme
+
+    Toolbar --> ThemeCtl
+    Build --> AppIcon
+    Toolbar --> AppIcon
+    AppIcon --> LogoRes
+    CoinList --> CoinIcon
+    CoinIcon --> CoinRes
+
+    Toolbar -->|currency callback| Feed
+    Toolbar -->|language callback| Translator
+    Toolbar -->|language callback| CoinList
+    Toolbar -->|language callback| Footer
+    ThemeCtl --> Theme
+
+    Feed --> MarketProviders
+    Feed --> FXProvider
+    Feed --> MarketSnap
+    Feed -->|transforms snapshots into| Coin
+    Feed -->|OnMarketUpdate model.Coin slice| CoinList
+    Feed -->|OnStatus status event| Footer
+
+    MarketProviders --> CG
+    MarketProviders --> CRC
+    MarketProviders --> CL
+    FXProvider --> OER
+
+    CG --> HTTPHelper
+    CRC --> HTTPHelper
+    CL --> HTTPHelper
+    OER --> HTTPHelper
+
+    Coin --> CoinList
+
+    style Entry fill:#e3f2fd,stroke:#1976d2,stroke-width:2px
+    style UI fill:#fff3e0,stroke:#f57c00,stroke-width:2px
+    style FeedLayer fill:#f3e5f5,stroke:#7b1fa2,stroke-width:2px
+    style ProviderImpl fill:#e8f5e9,stroke:#388e3c,stroke-width:2px
+    style Model fill:#fce4ec,stroke:#c2185b,stroke-width:2px
+    style Resources fill:#e0f7fa,stroke:#0097a7,stroke-width:2px
+```
 
 ## Technical Details 🔧
 
@@ -153,168 +322,6 @@ Notes:
 - Builds Windows / Linux targets in `bin/`
 - macOS build may be skipped on a Windows host because Fyne macOS builds require CGO + a macOS cross-toolchain
 
-## Feature Tour 📋
-
-### Main Window (Dark Theme)
-
-<p align="center">
-  <img src="docs/designs/UI%20dark.png" alt="CryptoView dark theme UI" width="470" />
-</p>
-
-Dark UI with:
-
-- top toolbar (`currency`, `language`, `theme toggle`)
-- tracked coin rows (`ticker`, `name`, `price`, `24h change`, `update time`)
-- footer status with provider/source feedback
-
-### Main Window (Light Theme)
-
-<p align="center">
-  <img src="docs/designs/UI%20Light.png" alt="CryptoView light theme UI" width="470" />
-</p>
-
-Same workflow and layout with a brighter palette for day-time readability.
-
-## User Journey Flow
-
-```mermaid
-flowchart TD
-    Start([Launch CryptoView]) --> Main["main.go creates app<br/>and builds main window"]
-    Main --> Bootstrap["Window renders with mock coin data"]
-    Bootstrap --> FeedStart["marketfeed.Feed.Start()"]
-    FeedStart --> Loading["Footer: Loading..."]
-
-    Loading --> FXCycle["FX cycle fetches USD/EUR/RUB rates"]
-    Loading --> MarketCycle["Market cycle tries providers in order"]
-
-    MarketCycle --> ProviderOK{"Provider success?"}
-    ProviderOK -->|Yes| BuildCoins["Build display coins<br/>with selected fiat + cached FX"]
-    BuildCoins --> UiUpdate["OnMarketUpdate → CoinList.ReplaceData"]
-    UiUpdate --> FooterOK["Footer: OK / OK+Provider"]
-
-    ProviderOK -->|No| Fallback{"Try next provider?"}
-    Fallback -->|Yes| MarketCycle
-    Fallback -->|No| CacheCheck{"Cached data available?"}
-
-    CacheCheck -->|Yes| CachedUpdate["Use cached data + refresh list"]
-    CachedUpdate --> WarnStatus["Footer: warning (rate limit or offline)"]
-
-    CacheCheck -->|No| ErrorStatus["Footer: error — no data available"]
-
-    FooterOK --> UserAction{"User action"}
-    WarnStatus --> UserAction
-    ErrorStatus --> UserAction
-
-    UserAction -->|Switch fiat USD/EUR/RUB| FiatChange["Toolbar → Feed.SetFiat()<br/>recalculate displayed prices"]
-    FiatChange --> UiUpdate
-
-    UserAction -->|Switch language EN/RU| LangChange["Translator + Toolbar/List/Footer text refresh"]
-    LangChange --> UserAction
-
-    UserAction -->|Toggle theme| ThemeToggle["ThemeController.Toggle()<br/>Light/Dark mode update"]
-    ThemeToggle --> UserAction
-
-    UserAction -->|Close window| Close["Feed.Stop() → window closes"]
-    Close --> End([Done])
-
-    style Start fill:#667eea,stroke:#333,stroke-width:3px,color:#fff
-    style End fill:#764ba2,stroke:#333,stroke-width:3px,color:#fff
-    style Loading fill:#ffe66d,stroke:#333,stroke-width:2px
-    style FooterOK fill:#51cf66,stroke:#333,stroke-width:2px
-    style WarnStatus fill:#ffa94d,stroke:#333,stroke-width:2px
-    style ErrorStatus fill:#ff6b6b,stroke:#333,stroke-width:2px
-    style UserAction fill:#4ecdc4,stroke:#333,stroke-width:2px
-```
-
-## Architecture / Class Interaction Diagram
-
-```mermaid
-flowchart TD
-    subgraph Entry["Entry Point"]
-        Main["cmd/cryptoview/main.go"]
-    end
-
-    subgraph UI["UI Layer (internal/ui + components)"]
-        Build["ui.BuildMainWindow(app, data)"]
-        Toolbar["components.Toolbar"]
-        ThemeCtl["components.ThemeController"]
-        CoinList["components.CoinListController"]
-        Footer["ui.FooterController"]
-        Translator["i18n.Translator"]
-        Assets["assets.LoadResource(...)"]
-        Theme["ui/theme.CustomTheme"]
-    end
-
-    subgraph FeedLayer["Market Feed Layer (internal/service/marketfeed)"]
-        Feed["marketfeed.Feed<br/>orchestrates market + FX polling<br/>applies cooldowns + fallback"]
-        MarketProviders["MarketProvider chain<br/>CoinGecko → CryptoCompare → CoinLore"]
-        FXProvider["FXProvider<br/>OpenExchangeRatesProvider"]
-        MarketSnap["MarketSnapshot / FXSnapshot<br/>cached data layer"]
-    end
-
-    subgraph ProviderImpl["Provider Implementations"]
-        CG["CoinGeckoProvider"]
-        CRC["CryptoCompareProvider"]
-        CL["CoinLoreProvider"]
-        OER["OpenExchangeRatesProvider"]
-        APIClient["api.Client / GetMarkets(...)"]
-    end
-
-    subgraph Model["Model Layer"]
-        Coin["model.Coin<br/>ticker, name, price, change, time"]
-    end
-
-    subgraph Resources["Bundled Resources"]
-        LogoRes["resources/Logo/*"]
-        CoinRes["resources/coins/*"]
-    end
-
-    Main --> Build
-
-    Build --> Toolbar
-    Build --> CoinList
-    Build --> Footer
-    Build --> Translator
-    Build --> Feed
-    Build --> Theme
-
-    Toolbar --> ThemeCtl
-    Toolbar --> Assets
-    Assets --> LogoRes
-    CoinList --> Assets
-    Assets --> CoinRes
-
-    Toolbar -->|currency callback| Feed
-    Toolbar -->|language callback| Translator
-    Toolbar -->|language callback| CoinList
-    Toolbar -->|language callback| Footer
-    ThemeCtl --> Theme
-
-    Feed --> MarketProviders
-    Feed --> FXProvider
-    Feed --> MarketSnap
-    Feed -->|transforms snapshots into| Coin
-    Feed -->|OnMarketUpdate model.Coin slice| CoinList
-    Feed -->|OnStatus status event| Footer
-
-    MarketProviders --> CG
-    MarketProviders --> CRC
-    MarketProviders --> CL
-
-    CG --> APIClient
-    CRC --> APIClient
-    CL --> APIClient
-    OER --> FXProvider
-
-    Coin --> CoinList
-
-    style Entry fill:#e3f2fd,stroke:#1976d2,stroke-width:2px
-    style UI fill:#fff3e0,stroke:#f57c00,stroke-width:2px
-    style FeedLayer fill:#f3e5f5,stroke:#7b1fa2,stroke-width:2px
-    style ProviderImpl fill:#e8f5e9,stroke:#388e3c,stroke-width:2px
-    style Model fill:#fce4ec,stroke:#c2185b,stroke-width:2px
-    style Resources fill:#e0f7fa,stroke:#0097a7,stroke-width:2px
-```
 
 ## Testing 🧪
 
@@ -326,13 +333,16 @@ go test ./...
 
 The repository includes tests around:
 
-- `internal/api` — client/API behavior
-- `internal/model` — coin mapping and formatting helpers
-- `internal/service/marketfeed` — fallback, cooldown, cached data behavior
+- `internal/catalog` — tracked coin metadata and alias normalization
+- `internal/marketfeed` — fallback, cooldown, cached data behavior
+- `internal/providers` — provider HTTP parsing and error behavior
+- `internal/ui` — main window lifecycle, footer/controller behavior, and feed callbacks
 - `internal/ui/components` — toolbar and coin list interactions
-- `internal/ui/theme` — custom theme palette behavior
 - `internal/ui/i18n` — translations and formatting
-- `internal/ui` — footer/controller behavior
+- `internal/ui/theme` — custom theme palette behavior
+- `resources` — embedded resource lookup
+
+`internal/model` currently has no dedicated test files; it is covered indirectly through feed and UI tests.
 
 ## Project Notes
 

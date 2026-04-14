@@ -58,4 +58,5 @@
 [2026-03-02 23:46:35] User reported app freeze on close in offline mode with repeated provider timeout logs - Implemented stop-cancel fix in marketfeed and validated full test suite success.
 [2026-04-10 22:28:00 +03:00] User requested full implementation of the approved deep idiomatic refactor plan for CryptoView - Completed with code, tooling, docs, and verification updates.
 
-[2026-04-10 22:57:15 +03:00] User requested a full README refresh based on current code and repomix context, including simple architecture diagrams and clearer runtime explanation - Implemented.
+[2026-04-10 22:57:15 +03:00] User requested a full README refresh based on current code and repomix context, including simple architecture diagrams and clearer runtime explanation - Implemented.[2026-04-14 17:18:57 +03:00] User requested an audit of README.md against the actual CryptoView project, with focus on Architecture / Class Interaction Diagram accuracy - Investigated locally and prepared discrepancy report.
+[2026-04-14 17:53:00 +03:00] User requested README Architecture / Class Interaction Diagram and testing-section fixes for current package/type names - Updated README.md and verified with go test ./....
